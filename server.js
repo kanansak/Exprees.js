@@ -11,17 +11,20 @@ app.use(express.json());
 
 
 // นำเส้นทาง GET จากไฟล์ get.js
-const getRoutes = require('./get');
+const getRoutes = require('./latestData');
 app.use(getRoutes);
 
 // นำเส้นทาง POST จากไฟล์ post.js
-const postRoutes = require('./post'); // ต้องเป็นตำแหน่งของไฟล์ post.js จริง
+const postRoutes = require('./post');
 app.use(postRoutes); // กำหนดเส้นทางที่จะเชื่อมกับ postRoutes ในที่นี้คือ '/post-route'
 
-// นำเส้นทาง CRUD ของผู้ใช้งานมาใช้
-const userRoutes = require('./user'); // นำเข้าไฟล์ CRUD ของผู้ใช้งาน
-app.use('/api', userRoutes);
 
+// นำเส้นทาง CRUD ของผู้ใช้งานมาใช้
+// const userRoutes = require('./user'); // นำเข้าไฟล์ CRUD ของผู้ใช้งาน
+// app.use('/api', userRoutes);
+
+const dataRouter = require('./api');
+app.use('/api', dataRouter);
 
 // รัน Express server ที่พอร์ตที่คุณต้องการ
 const PORT = process.env.PORT || 3000;
