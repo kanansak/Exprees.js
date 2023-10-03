@@ -62,22 +62,29 @@ router.post('/data', (req, res) => {
 
 
   
-  // API Endpoint สำหรับการอัปเดตข้อมูล
-  router.put('/data/:id', (req, res) => {
-    const id = req.params.id;
-    const dataToUpdate = req.body;
-  
-    // Update data in MySQL
-    db.query('UPDATE ESP_DATA SET ? WHERE id = ?', [dataToUpdate, id], (err, result) => {
-      if (err) {
-        console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' + err);
-        res.status(500).json({ error: 'ไม่สามารถอัปเดตข้อมูลได้' });
-        return;
-      }
-      console.log('อัปเดตข้อมูลสำเร็จ');
-      res.status(200).json({ message: 'อัปเดตข้อมูลสำเร็จ' });
-    });
+router.put('/data/:id', (req, res) => {
+  const id = req.params.id;
+  const updatedData = req.body;
+
+  // อัปเดตคอลัมน์ updated_at ในข้อมูลที่จะอัปเดต
+  updatedData.updated_at = new Date();
+
+  // Update data in MySQL
+  db.query('UPDATE ESP_DATA SET ? WHERE id = ?', [updatedData, id], (err, result) => {
+    if (err) {
+      console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' + err);
+      res.status(500).json({ error: 'ไม่สามารถอัปเดตข้อมูลได้' });
+      return;
+    }
+    console.log('อัปเดตข้อมูลสำเร็จ');
+    res.status(200).json({ message: 'อัปเดตข้อมูลสำเร็จ' });
   });
+});
+
+
+
+
+
 
   
   // API Endpoint สำหรับการลบข้อมูล
