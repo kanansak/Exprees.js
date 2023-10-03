@@ -23,8 +23,13 @@ app.use(postRoutes); // กำหนดเส้นทางที่จะเ�
 // const userRoutes = require('./user'); // นำเข้าไฟล์ CRUD ของผู้ใช้งาน
 // app.use('/api', userRoutes);
 
+//http://localhost:3000/api/data
 const dataRouter = require('./api');
 app.use('/api', dataRouter);
+
+//http://localhost:3000/devices/
+const deviceRouter = require('./api-device')
+app.use(deviceRouter);
 
 // รัน Express server ที่พอร์ตที่คุณต้องการ
 const PORT = process.env.PORT || 3000;
