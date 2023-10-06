@@ -11,7 +11,7 @@ app.use(express.json());
 
 
 // นำเส้นทาง GET จากไฟล์ get.js
-const getRoutes = require('./latestData');
+const getRoutes = require('./Devices/latestData');
 app.use(getRoutes);
 
 // นำเส้นทาง POST จากไฟล์ post.js
@@ -20,16 +20,20 @@ app.use(postRoutes); // กำหนดเส้นทางที่จะเ�
 
 
 // นำเส้นทาง CRUD ของผู้ใช้งานมาใช้
-// const userRoutes = require('./user'); // นำเข้าไฟล์ CRUD ของผู้ใช้งาน
-// app.use('/api', userRoutes);
+ const userRoutes = require('./User/api-user'); // นำเข้าไฟล์ CRUD ของผู้ใช้งาน
+ app.use(userRoutes);
 
 //http://localhost:3000/api/data
 const dataRouter = require('./api');
 app.use('/api', dataRouter);
 
 //http://localhost:3000/devices/
-const deviceRouter = require('./api-device')
+const deviceRouter = require('./Devices/api-device')
 app.use(deviceRouter);
+
+
+const auth0 = require('./User/auth0')
+app.use(auth0);
 
 // รัน Express server ที่พอร์ตที่คุณต้องการ
 const PORT = process.env.PORT || 3000;
