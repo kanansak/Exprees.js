@@ -13,20 +13,19 @@ app.use(express.json());
 const getRoutes = require('./Devices/latestData');
 app.use(getRoutes);
 
-
 // นำเส้นทาง CRUD ของผู้ใช้งานมาใช้
  const userRoutes = require('./User/api-user'); // นำเข้าไฟล์ CRUD ของผู้ใช้งาน
  app.use(userRoutes);
 
 
 //http://localhost:3000/devices/
-const deviceRouter = require('./Devices/api-device')
-app.use(deviceRouter);
+//const deviceRouter = require('./Devices/api-device')
+//app.use(deviceRouter);
 
 
 //http://localhost:3000/devices
 const datadevice = require('./Devices/data-device')
-app.use('test',datadevice);
+app.use(datadevice);
 
 
 //http://localhost:3000/data_esp
