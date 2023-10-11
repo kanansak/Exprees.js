@@ -4,11 +4,11 @@ const router = express.Router();
 
   // CREATE (POST)
   router.post('/devices', (req, res) => {
-    const { device_id, device_name, device_detail, device_location, device_map, device_type, group_id } = req.body;
+    const { device_id, device_name, device_detail, device_location, device_map_img, device_type, group_id } = req.body;
     const query = 'INSERT INTO Device (device_id, device_name, device_detail, device_location, device_map, device_type, group_id, created_timestamp, modified_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
   
     // แทนค่า null ถ้าข้อมูลเป็น null
-    const values = [device_id || null, device_name || null, device_detail || null, device_location || null, device_map || null, device_type || null, group_id || null];
+    const values = [device_id || null, device_name || null, device_detail || null, device_location || null, device_map_img || null, device_type || null, group_id || null];
   
     db.query(query, values, (err, result) => {
       if (err) {
@@ -23,7 +23,14 @@ const router = express.Router();
 
   // READ (GET all devices)
   router.get('/devices', (req, res) => {
-    const query = 'SELECT * FROM Device';
+    const query = `
+    SELECT Device.device_id, Device.device_name, Device.device_detail, Device.device_location, 
+      Device.device_map_img, Device_Type.type_name AS device_type, Device_Group.group_name AS group_id, 
+      Device.created_timestamp, Device.modified_timestamp 
+    FROM Device
+    INNER JOIN Device_Type ON Device.device_type = Device_Type.type_id
+    INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id
+  `;
   
     db.query(query, (err, result) => {
       if (err) {
@@ -61,14 +68,14 @@ const router = express.Router();
   router.put('/devices/:device_id', (req, res) => {
     const device_id = req.params.device_id;
     const { device_name, device_detail, device_location, device_map, device_type, group_id } = req.body;
-    const query = 'UPDATE Device SET device_name = ?, device_detail = ?, device_location = ?, device_map = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
+    const query = 'UPDATE Device SET device_name = ?, device_detail = ?, device_location = ?, device_map_img = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
   
     if (!device_name || !device_detail || !device_location || !device_map || !device_type || !group_id) {
       res.status(400).json({ message: 'กรุณากรอกข้อมูลทั้งหมด' });
       return;
     }
   
-    db.query(query, [device_name, device_detail, device_location, device_map, device_type, group_id, device_id], (err, result) => {
+    db.query(query, [device_name, device_detail, device_location, device_map_img, device_type, group_id, device_id], (err, result) => {
       if (err) {
         console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' + err.message);
         res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
