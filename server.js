@@ -24,9 +24,9 @@ app.use(getRoutes);
 //app.use(deviceRouter);
 
 
-//http://localhost:3000/test/devices
+//http://localhost:3000/devices
 const datadevice = require('./Devices/data-device')
-app.use('/test',datadevice);
+app.use(datadevice);
 
 
 //http://localhost:3000/data_esp

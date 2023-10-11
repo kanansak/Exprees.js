@@ -2,8 +2,8 @@ const express = require('express');
 const db = require('../db');
 const router = express.Router();
 
-// CREATE (POST)
-router.post('/devices', (req, res) => {
+  // CREATE (POST)
+  router.post('/devices', (req, res) => {
     const { device_id, device_name, device_detail, device_location, device_map, device_type, group_id } = req.body;
     const query = 'INSERT INTO Device (device_id, device_name, device_detail, device_location, device_map, device_type, group_id, created_timestamp, modified_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
   
@@ -105,8 +105,8 @@ router.post('/devices', (req, res) => {
     });
   });
   
-// GET Latest Device Data (by unique device_id)
-router.get('/latest_device_data', (req, res) => {
+  // GET Latest Device Data (by unique device_id)
+  router.get('/latest_device_data', (req, res) => {
     const query = 'SELECT * FROM Device WHERE (device_id, created_timestamp) IN (SELECT device_id, MAX(created_timestamp) FROM Device GROUP BY device_id)';
   
     db.query(query, (err, result) => {
