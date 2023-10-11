@@ -31,6 +31,7 @@ router.get('/latestData', (req, res) => {
   });
 });
 
+
 module.exports = router;
 
 //http://localhost:3000/latestData?device_id=ESP-001

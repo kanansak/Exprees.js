@@ -31,6 +31,11 @@ app.use('/api', dataRouter);
 const deviceRouter = require('./Devices/api-device')
 app.use(deviceRouter);
 
+const datadevice = require('./Devices/data-device')
+app.use('/test',datadevice);
+
+const data =require('./Devices/data')
+app.use(data);
 
 const auth0 = require('./User/auth0')
 app.use(auth0);
