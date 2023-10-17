@@ -26,8 +26,7 @@ const router = express.Router();
   router.get('/devices', (req, res) => {
     const query = `
     SELECT Device.device_id, Device.device_name, Device.device_detail, Device.device_location, 
-      Device.device_map_img, Device_Type.type_name AS device_type, Device_Group.group_name AS group_id, 
-      Device.created_timestamp, Device.modified_timestamp 
+      Device.device_map_img, Device_Type.type_name AS device_type, Device.created_timestamp, Device.modified_timestamp 
     FROM Device
     INNER JOIN Device_Type ON Device.device_type = Device_Type.type_id
   `;
