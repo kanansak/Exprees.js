@@ -30,7 +30,6 @@ const router = express.Router();
       Device.created_timestamp, Device.modified_timestamp 
     FROM Device
     INNER JOIN Device_Type ON Device.device_type = Device_Type.type_id
-    INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id
   `;
   
     db.query(query, (err, result) => {
