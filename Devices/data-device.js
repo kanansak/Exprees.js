@@ -5,20 +5,21 @@ const router = express.Router();
   // CREATE (POST)
   router.post('/devices', (req, res) => {
     const { device_id, device_name, device_detail, device_location, device_map_img, device_type, group_id } = req.body;
-    const query = 'INSERT INTO Device (device_id, device_name, device_detail, device_location, device_map, device_type, group_id, created_timestamp, modified_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
-  
+    const query = 'INSERT INTO Device (device_id, device_name, device_detail, device_location, device_map_img, device_type, group_id, created_timestamp, modified_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+
     // แทนค่า null ถ้าข้อมูลเป็น null
     const values = [device_id || null, device_name || null, device_detail || null, device_location || null, device_map_img || null, device_type || null, group_id || null];
-  
+
     db.query(query, values, (err, result) => {
       if (err) {
         console.error('เกิดข้อผิดพลาดในการสร้างข้อมูล: ' + err.message);
         return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการสร้างข้อมูล' });
       }
-  
+
       return res.json({ message: 'ข้อมูลถูกสร้างเรียบร้อย' });
     });
   });
+
   
 
   // READ (GET all devices)
@@ -65,31 +66,32 @@ const router = express.Router();
   }); 
 
   // UPDATE (PUT)
-  router.put('/devices/:device_id', (req, res) => {
+  router.put('/test/devices/:device_id', (req, res) => {
     const device_id = req.params.device_id;
     const { device_name, device_detail, device_location, device_map, device_type, group_id } = req.body;
     const query = 'UPDATE Device SET device_name = ?, device_detail = ?, device_location = ?, device_map_img = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
-  
+
     if (!device_name || !device_detail || !device_location || !device_map || !device_type || !group_id) {
       res.status(400).json({ message: 'กรุณากรอกข้อมูลทั้งหมด' });
       return;
     }
-  
-    db.query(query, [device_name, device_detail, device_location, device_map_img, device_type, group_id, device_id], (err, result) => {
+
+    db.query(query, [device_name, device_detail, device_location, device_map, device_type, group_id, device_id], (err, result) => {
       if (err) {
         console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' + err.message);
         res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
         return;
       }
-  
+
       if (result.affectedRows === 0) {
         res.status(404).json({ message: 'ไม่พบข้อมูลอุปกรณ์ที่ระบุ' });
         return;
       }
-  
+
       res.json({ message: 'ข้อมูลถูกอัปเดตเรียบร้อย' });
     });
   });
+
   
   // DELETE (DELETE)
   router.delete('/devices/:device_id', (req, res) => {
