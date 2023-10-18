@@ -62,8 +62,32 @@ router.get('/latest_data_tuya', (req, res) => {
     });
 });
 
-  
+
+router.get('/latest_data', (req, res) => {
+  const device_id = req.query.device_id;
+  const queryESP = 'SELECT * FROM Data_ESP WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
+  const queryTuya = 'SELECT * FROM Data_Tuya WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
+
+  const response = {};
+
+  db.query(queryESP, [device_id], (errESP, resultESP) => {
+      if (!errESP && resultESP.length > 0) {
+          response.esp = resultESP[0];
+      }
+
+      db.query(queryTuya, [device_id], (errTuya, resultTuya) => {
+          if (!errTuya && resultTuya.length > 0) {
+              response.tuya = resultTuya[0];
+          }
+
+          res.json(response);
+      });
+  });
+});
+
+
 module.exports = router;
 //latest_data_esp?device_id=your_device_id
 //latest_data_tuya?device_id=your_device_id
 //http://localhost:3000/latest_data_esp?device_id=ESP-001
+//http://localhost:3000/latest_data?device_id=ESP-002
