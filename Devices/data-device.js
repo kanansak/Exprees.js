@@ -91,26 +91,70 @@ const router = express.Router();
   });
 
   
-  // DELETE (DELETE)
-  router.delete('/devices/:device_id', (req, res) => {
-    const device_id = req.params.device_id;
-    const query = 'DELETE FROM Device WHERE device_id = ?';
-  
-    db.query(query, [device_id], (err, result) => {
+ // DELETE (DELETE)
+router.delete('/devices/:device_id', (req, res) => {
+  const device_id = req.params.device_id;
+
+  // Start a transaction
+  db.beginTransaction((err) => {
+    if (err) {
+      console.error('เกิดข้อผิดพลาดในการเริ่มทำงานของธุรกรรม: ' + err.message);
+      res.status(500).send('เกิดข้อผิดพลาดในการลบข้อมูล');
+      return;
+    }
+
+    // Define SQL queries
+    const updateDataESPQuery = 'UPDATE Data_ESP SET device_id = NULL WHERE device_id = ?';
+    const updateDataTuyaQuery = 'UPDATE Data_Tuya SET device_id = NULL WHERE device_id = ?';
+    const deleteDeviceQuery = 'DELETE FROM Device WHERE device_id = ?';
+
+    // Execute queries
+    db.query(updateDataESPQuery, [device_id], (err, result) => {
       if (err) {
-        console.error('เกิดข้อผิดพลาดในการลบข้อมูล: ' + err.message);
-        res.status(500).send('เกิดข้อผิดพลาดในการลบข้อมูล');
+        db.rollback(() => {
+          console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล Data_ESP: ' + err.message);
+          res.status(500).send('เกิดข้อผิดพลาดในการลบข้อมูล');
+        });
         return;
       }
-  
-      if (result.affectedRows === 0) {
-        res.status(404).json({ message: 'ไม่พบข้อมูลอุปกรณ์ที่ระบุ' });
-        return;
-      }
-  
-      res.json({ message: 'ข้อมูลถูกลบเรียบร้อย' });
+
+      db.query(updateDataTuyaQuery, [device_id], (err, result) => {
+        if (err) {
+          db.rollback(() => {
+            console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล Data_Tuya: ' + err.message);
+            res.status(500).send('เกิดข้อผิดพลาดในการลบข้อมูล');
+          });
+          return;
+        }
+
+        db.query(deleteDeviceQuery, [device_id], (err, result) => {
+          if (err) {
+            db.rollback(() => {
+              console.error('เกิดข้อผิดพลาดในการลบข้อมูล Device: ' + err.message);
+              res.status(500).send('เกิดข้อผิดพลาดในการลบข้อมูล');
+            });
+            return;
+          }
+
+          // Commit the transaction if all queries are successful
+          db.commit((err) => {
+            if (err) {
+              db.rollback(() => {
+                console.error('เกิดข้อผิดพลาดในการยืนยันการทำงานของธุรกรรม: ' + err.message);
+                res.status(500).send('เกิดข้อผิดพลาดในการลบข้อมูล');
+              });
+              return;
+            }
+
+            res.json({ message: 'ข้อมูลถูกลบเรียบร้อย' });
+          });
+        });
+      });
     });
   });
+});
+
+
   
   // GET Latest Device Data (by unique device_id)
   router.get('/latest_device_data', (req, res) => {
