@@ -104,8 +104,8 @@ router.delete('/devices/:device_id', (req, res) => {
     }
 
     // Define SQL queries
-    const updateDataESPQuery = 'UPDATE Data_ESP SET device_id = NULL WHERE device_id = ?';
-    const updateDataTuyaQuery = 'UPDATE Data_Tuya SET device_id = NULL WHERE device_id = ?';
+    const updateDataESPQuery = 'DELETE FROM Data_ESP WHERE device_id = ?';
+    const updateDataTuyaQuery = 'DELETE FROM Data_Tuya WHERE device_id = ?';
     const deleteDeviceQuery = 'DELETE FROM Device WHERE device_id = ?';
 
     // Execute queries
