@@ -64,7 +64,7 @@ const router = express.Router();
   }); 
 
   // UPDATE (PUT)
-  router.put('/test/devices/:device_id', (req, res) => {
+  router.put('/devices/:device_id', (req, res) => {
     const device_id = req.params.device_id;
     const { device_name, device_detail, device_location, device_map, device_type, group_id } = req.body;
     const query = 'UPDATE Device SET device_name = ?, device_detail = ?, device_location = ?, device_map_img = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
