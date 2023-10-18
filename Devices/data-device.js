@@ -63,32 +63,75 @@ const router = express.Router();
     });
   }); 
 
-  // UPDATE (PUT)
-  router.put('/devices/:device_id', (req, res) => {
-    const device_id = req.params.device_id;
-    const { device_name, device_detail, device_location, device_map, device_type, group_id } = req.body;
-    const query = 'UPDATE Device SET device_name = ?, device_detail = ?, device_location = ?, device_map_img = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
+  // router.put('/devices/:device_id', (req, res) => {
+  //   const device_id = req.params.device_id;
+  //   const { device_name, device_detail, device_location, device_map, device_type, group_id } = req.body;
+  //   const query = 'UPDATE Device SET device_name = ?, device_detail = ?, device_location = ?, device_map_img = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
+  
+  //   if (!device_name || !device_location) {
+  //     res.status(400).json({ message: 'กรุณากรอกข้อมูลทั้งหมด' });
+  //     return;
+  //   }
+  
+  //   // // เช็คว่า device_type ถูกส่งมาหรือไม่
+  //   // if (typeof device_type !== 'undefined') {
+  //   //   // แปลง device_type เป็นตัวเลข
+  //   //   const deviceTypeInt = parseInt(device_type, 10);
+  
+  //   //   if (isNaN(deviceTypeInt)) {
+  //   //     res.status(400).json({ message: 'device_type ต้องเป็นค่าจำนวนเต็ม' });
+  //   //     return;
+  //   //   }
+  //   // }
+  
+  //   db.query(query, [device_name, device_detail, device_location, device_map, device_type, group_id, device_id], (err, result) => {
+  //     if (err) {
+  //       console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' + err.message);
+  //       res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
+  //       return;
+  //     }
+  
+  //     if (result.affectedRows === 0) {
+  //       res.status(404).json({ message: 'ไม่พบข้อมูลอุปกรณ์ที่ระบุ' });
+  //       return;
+  //     }
+  
+  //     res.json({ message: 'ข้อมูลถูกอัปเดตเรียบร้อย' });
+  //   });
+  // });
+  
+// UPDATE (PUT)
 
-    if (!device_name || !device_detail || !device_location || !device_map || !device_type || !group_id) {
-      res.status(400).json({ message: 'กรุณากรอกข้อมูลทั้งหมด' });
+router.put('/devices/:device_id', (req, res) => {
+  const device_id = req.params.device_id;
+  const { device_name, device_detail, device_location, device_map, device_type, group_id } = req.body;
+  const query = 'UPDATE Device SET device_name = ?, device_detail = ?, device_location = ?, device_map_img = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
+
+  if (!device_name || !device_location ) {
+    res.status(400).json({ message: 'กรุณากรอกข้อมูลทั้งหมด' });
+    return;
+  }
+
+  db.query(query, [device_name, device_detail, device_location, device_map, device_type, group_id, device_id], (err, result) => {
+    if (err) {
+      console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' + err.message);
+      res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
       return;
     }
 
-    db.query(query, [device_name, device_detail, device_location, device_map, device_type, group_id, device_id], (err, result) => {
-      if (err) {
-        console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' + err.message);
-        res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
-        return;
-      }
+    if (result.affectedRows === 0) {
+      res.status(404).json({ message: 'ไม่พบข้อมูลอุปกรณ์ที่ระบุ' });
+      return;
+    }
 
-      if (result.affectedRows === 0) {
-        res.status(404).json({ message: 'ไม่พบข้อมูลอุปกรณ์ที่ระบุ' });
-        return;
-      }
-
-      res.json({ message: 'ข้อมูลถูกอัปเดตเรียบร้อย' });
-    });
+    res.json({ message: 'ข้อมูลถูกอัปเดตเรียบร้อย' });
   });
+});
+
+
+  
+  
+  
 
   
  // DELETE (DELETE)
