@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db'); // นำเข้าไฟล์การเชื่อมต่อ MySQL
+const db = require('../config/db'); // นำเข้าไฟล์การเชื่อมต่อ MySQL
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
-app.use(bodyParser.json());
+router.use(bodyParser.json());
 
 // สร้างผู้ใช้งานใหม่
 router.post('/users', (req, res) => {

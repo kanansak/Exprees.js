@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('../db');
+const db = require('../config/db');
 const router = express.Router();
 
 // สร้าง API Endpoint เพื่อดึงข้อมูลล่าสุดโดยอ้างอิงตาม device_id

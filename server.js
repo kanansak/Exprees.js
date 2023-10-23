@@ -1,6 +1,7 @@
 // นำเข้า Express และ MySQL module
 const express = require('express');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
 // สร้าง Express application
 const app = express();
@@ -9,9 +10,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const getRoutes = require('./Devices/latestData');
 app.use(getRoutes);
+
+const api = require('./routes/api_routes');
+const auth = require('./routes/auth_routes');
+app.use(api)
+app.use(auth)
 
 // นำเส้นทาง CRUD ของผู้ใช้งานมาใช้
  const userRoutes = require('./User/api-user'); // นำเข้าไฟล์ CRUD ของผู้ใช้งาน
