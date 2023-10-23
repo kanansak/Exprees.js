@@ -11,7 +11,17 @@
     "type": "git",
     "url": "git+https://github.com/kanansak/Exprees.js.git"
   },
-  "keywords": [],
+  "keywords": [
+    "node.js",
+    "express",
+    "jwt",
+    "login",
+    "registration",
+    "rest api",
+    "authentication",
+    "authorization",
+    "mysql"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
@@ -19,9 +29,13 @@
   },
   "homepage": "https://github.com/kanansak/Exprees.js#readme",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-session": "^2.0.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "express-oauth2-jwt-bearer": "^1.5.0",
-    "mysql": "^2.18.1"
+    "jsonwebtoken": "^9.0.2",
+    "mysql": "^2.18.1",
+    "sequelize": "^6.33.0"
   }
 }

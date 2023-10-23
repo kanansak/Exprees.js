@@ -10,11 +10,11 @@ app.use(cors());
 app.use(express.json());
 
 
-const getRoutes = require('./Devices/latestData');
+const getRoutes = require('./app/Devices/latestData');
 app.use(getRoutes);
 
 // นำเส้นทาง CRUD ของผู้ใช้งานมาใช้
- const userRoutes = require('./User/api-user'); // นำเข้าไฟล์ CRUD ของผู้ใช้งาน
+ const userRoutes = require('./app/User/api-user'); // นำเข้าไฟล์ CRUD ของผู้ใช้งาน
  app.use(userRoutes);
 
 
@@ -24,12 +24,12 @@ app.use(getRoutes);
 
 
 //http://localhost:3000/devices
-const datadevice = require('./Devices/data-device')
+const datadevice = require('./app/Devices/data-device')
 app.use(datadevice);
 
 
 //http://localhost:3000/data_esp
-const data =require('./Devices/data')
+const data =require('./app/Devices/data')
 app.use(data);
 
 
