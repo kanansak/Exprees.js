@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('../config/db.config');
+const db = require('../config/db.config').default;
 const router = express.Router();
 
   // CREATE (POST)

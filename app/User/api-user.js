@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db.config'); // นำเข้าไฟล์การเชื่อมต่อ MySQL
+const db = require('../config/db.config').default; // นำเข้าไฟล์การเชื่อมต่อ MySQL
 
 // สร้างผู้ใช้งานใหม่
 router.post('/users', (req, res) => {

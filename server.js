@@ -21,7 +21,7 @@ app.use(
     httpOnly: true,
   })
 );
-const db = require("./app/models");
+const db = require("./app/models").default;
 const Role = db.role;
 
 db.sequelize.sync({force: true}).then(() => {
