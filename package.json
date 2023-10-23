@@ -36,6 +36,7 @@
     "express-oauth2-jwt-bearer": "^1.5.0",
     "jsonwebtoken": "^9.0.2",
     "mysql": "^2.18.1",
+    "mysql2": "^3.6.2",
     "sequelize": "^6.33.0"
   }
 }
