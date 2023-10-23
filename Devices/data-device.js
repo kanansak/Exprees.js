@@ -105,7 +105,7 @@ const router = express.Router();
 
 router.put('/devices/:device_id', (req, res) => {
   const device_id = req.params.device_id;
-  const { device_name, device_detail, device_location, device_map, device_type, group_id } = req.body;
+  const { device_name, device_detail, device_location, device_map_img, device_type, group_id } = req.body;
   const query = 'UPDATE Device SET device_name = ?, device_detail = ?, device_location = ?, device_map_img = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
 
   if (!device_name || !device_location ) {
@@ -113,7 +113,7 @@ router.put('/devices/:device_id', (req, res) => {
     return;
   }
 
-  db.query(query, [device_name, device_detail, device_location, device_map, device_type, group_id, device_id], (err, result) => {
+  db.query(query, [device_name, device_detail, device_location, device_map_img, device_type, group_id, device_id], (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' + err.message);
       res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
