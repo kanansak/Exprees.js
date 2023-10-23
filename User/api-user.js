@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db'); // นำเข้าไฟล์การเชื่อมต่อ MySQL
+const jwt = require('jsonwebtoken');
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
 
 // สร้างผู้ใช้งานใหม่
 router.post('/users', (req, res) => {
@@ -60,5 +63,6 @@ router.delete('/users/:id', (req, res) => {
     }
   });
 });
+
 
 module.exports = router;
