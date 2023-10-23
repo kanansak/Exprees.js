@@ -24,12 +24,13 @@ const router = express.Router();
 
   // READ (GET all devices)
   router.get('/devices', (req, res) => {
-    const query = `
-    SELECT Device.device_id, Device.device_name, Device.device_detail, Device.device_location, 
-      Device.device_map_img, Device_Type.type_name AS device_type,group_id, Device.created_timestamp, Device.modified_timestamp 
-    FROM Device
-    INNER JOIN Device_Type ON Device.device_type = Device_Type.type_id
-  `;
+    const query = 'SELECT * FROM Device';
+  //   const query = `
+  //   SELECT Device.device_id, Device.device_name, Device.device_detail, Device.device_location, 
+  //     Device.device_map_img, Device_Type.type_name AS device_type,group_id, Device.created_timestamp, Device.modified_timestamp 
+  //   FROM Device
+  //   INNER JOIN Device_Type ON Device.device_type = Device_Type.type_id
+  // `;
   
     db.query(query, (err, result) => {
       if (err) {
