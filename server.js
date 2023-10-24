@@ -10,6 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 
+
 const getRoutes = require('./Devices/latestData');
 app.use(getRoutes);
 
@@ -21,6 +22,9 @@ app.use(getRoutes);
 //http://localhost:3000/devices/
 //const deviceRouter = require('./Devices/api-device')
 //app.use(deviceRouter);
+
+const uploadFileRouter = require('./upload-file');
+app.use(uploadFileRouter);
 
 
 //http://localhost:3000/devices
