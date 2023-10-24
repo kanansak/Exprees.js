@@ -1,21 +1,26 @@
 const express = require('express');
 const router = express.Router();
+const bodyParser = require('body-parser'); // เพิ่ม middleware bodyParser
 const db = require('../db'); // นำเข้าไฟล์การเชื่อมต่อ MySQL
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const { json } = require('express');
+const jsonParser = bodyParser.json()
 
-// สร้างผู้ใช้งานใหม่
-router.post('/users', (req, res) => {
-  const { username, email } = req.body;
+// // สร้างผู้ใช้งานใหม่
+// router.post('/users', (req, res) => {
+//   const { username, email } = req.body;
 
-  const sql = 'INSERT INTO users (username, email) VALUES (?, ?)';
-  db.query(sql, [username, email], (err, result) => {
-    if (err) {
-      console.error('เกิดข้อผิดพลาดในการสร้างผู้ใช้: ' + err.message);
-      res.status(500).send('เกิดข้อผิดพลาดในการสร้างผู้ใช้');
-    } else {
-      res.status(201).json({ message: 'สร้างผู้ใช้งานเรียบร้อยแล้ว' });
-    }
-  });
-});
+//   const sql = 'INSERT INTO users (username, email) VALUES (?, ?)';
+//   db.query(sql, [username, email], (err, result) => {
+//     if (err) {
+//       console.error('เกิดข้อผิดพลาดในการสร้างผู้ใช้: ' + err.message);
+//       res.status(500).send('เกิดข้อผิดพลาดในการสร้างผู้ใช้');
+//     } else {
+//       res.status(201).json({ message: 'สร้างผู้ใช้งานเรียบร้อยแล้ว' });
+//     }
+//   });
+// });
 
 // อ่านข้อมูลผู้ใช้งานทั้งหมด
 router.get('/users', (req, res) => {
@@ -60,5 +65,8 @@ router.delete('/users/:id', (req, res) => {
     }
   });
 });
+
+
+
 
 module.exports = router;
