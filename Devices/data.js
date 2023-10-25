@@ -85,14 +85,16 @@ router.get('/latest_data', (req, res) => {
   });
 });
 
-// GET Data (All)
-router.get('/data', (req, res) => {
-  const queryESP = 'SELECT * FROM Data_ESP';
-  const queryTuya = 'SELECT * FROM Data_Tuya';
-  
+// GET Data by device_id
+router.get('/data/:device_id', (req, res) => {
+  const device_id = req.params.device_id;
+
+  const queryESP = 'SELECT * FROM Data_ESP WHERE device_id = ?';
+  const queryTuya = 'SELECT * FROM Data_Tuya WHERE device_id = ?';
+
   const combinedData = {};
 
-  db.query(queryESP, (errESP, resultESP) => {
+  db.query(queryESP, [device_id], (errESP, resultESP) => {
     if (errESP) {
       console.error('เกิดข้อผิดพลาดในการดึงข้อมูล Data_ESP: ' + errESP.message);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล Data_ESP' });
@@ -101,7 +103,7 @@ router.get('/data', (req, res) => {
 
     combinedData.Data_ESP = resultESP;
 
-    db.query(queryTuya, (errTuya, resultTuya) => {
+    db.query(queryTuya, [device_id], (errTuya, resultTuya) => {
       if (errTuya) {
         console.error('เกิดข้อผิดพลาดในการดึงข้อมูล Data_Tuya: ' + errTuya.message);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล Data_Tuya' });
@@ -113,6 +115,7 @@ router.get('/data', (req, res) => {
     });
   });
 });
+
 
 module.exports = router;
 //latest_data_esp?device_id=your_device_id
