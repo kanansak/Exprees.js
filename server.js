@@ -23,6 +23,9 @@ app.use(getRoutes);
 //const deviceRouter = require('./Devices/api-device')
 //app.use(deviceRouter);
 
+const pushImage = require('./push-image');
+app.use(pushImage);
+
 const uploadFileRouter = require('./upload-file');
 app.use(uploadFileRouter);
 
