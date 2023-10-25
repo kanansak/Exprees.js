@@ -1,6 +1,7 @@
 // นำเข้า Express และ MySQL module
 const express = require('express');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
 // สร้าง Express application
 const app = express();
@@ -9,7 +10,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// เก็บข้อมูลผู้ใช้งานที่อนุญาตและข้อมูล Role
+const users = [
+  { email: 'admin@example.com', password: 'admin123', role: 'admin' },
+  { email: 'user@example.com', password: 'user123', role: 'user' }
+];
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+  const user = users.find(u => u.email === email && u.password === password);
 
+  if (user) {
+    res.json({ role: user.role });
+  } else {
+    res.status(401).json({ message: 'Authentication failed' });
+  }
+});
 
 const getRoutes = require('./Devices/latestData');
 app.use(getRoutes);
