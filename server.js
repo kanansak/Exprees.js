@@ -36,7 +36,7 @@ const data =require('./Devices/data')
 app.use(data);
 
 const login_regis = require('./User/auth0');
-app.use('/api/users', login_regis);
+app.use(login_regis);
 
 
 // รัน Express server ที่พอร์ตที่คุณต้องการ
