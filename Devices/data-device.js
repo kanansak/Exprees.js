@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const router = express.Router();
+const path = require('path');
 
   // CREATE (POST)
   router.post('/devices', (req, res) => {
@@ -216,6 +217,8 @@ router.delete('/devices/:device_id', (req, res) => {
   });
   
   
+  
+
   
   module.exports = router;
   
