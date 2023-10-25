@@ -85,6 +85,34 @@ router.get('/latest_data', (req, res) => {
   });
 });
 
+// GET Data (All)
+router.get('/data', (req, res) => {
+  const queryESP = 'SELECT * FROM Data_ESP';
+  const queryTuya = 'SELECT * FROM Data_Tuya';
+  
+  const combinedData = {};
+
+  db.query(queryESP, (errESP, resultESP) => {
+    if (errESP) {
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล Data_ESP: ' + errESP.message);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล Data_ESP' });
+      return;
+    }
+
+    combinedData.Data_ESP = resultESP;
+
+    db.query(queryTuya, (errTuya, resultTuya) => {
+      if (errTuya) {
+        console.error('เกิดข้อผิดพลาดในการดึงข้อมูล Data_Tuya: ' + errTuya.message);
+        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล Data_Tuya' });
+        return;
+      }
+
+      combinedData.Data_Tuya = resultTuya;
+      res.json(combinedData);
+    });
+  });
+});
 
 module.exports = router;
 //latest_data_esp?device_id=your_device_id
