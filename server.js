@@ -27,10 +27,6 @@ app.post('/login', (req, res) => {
 });
 
 
-const signinRoute = require('./User/signin');
-app.use('/api', signinRoute);
-const registerRoute = require('./User/register');
-app.use('/api', registerRoute);
 const getRoutes = require('./Devices/latestData');
 app.use(getRoutes);
 
