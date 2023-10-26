@@ -13,7 +13,7 @@ router.post('/signin', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const [results, fields] = await db.query('SELECT user_id, namef, password FROM users WHERE email_address = ? LIMIT 0, 1', [email]);
+    const [results, fields] = await db.query('SELECT id, namef, password FROM users WHERE email = ? LIMIT 0, 1', [email]);
 
     if (results.length > 0) {
       const user = results[0];
@@ -37,7 +37,7 @@ router.post('/signin', async (req, res) => {
           message: 'Success',
           id: user_id,
           token,
-          email_address: email,
+          email: email,
           expiry: Math.floor(Date.now() / 1000) + 3600, // Token expiry in Unix timestamp format
         });
       } else {
