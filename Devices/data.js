@@ -86,10 +86,10 @@ router.get('/latest_data', (req, res) => {
 });
 
 // GET Data by device_id
-router.get('/data/:device_id', (req, res) => {
-  const device_id = req.params.device_id;
+router.get('/data', (req, res) => {
+  const device_id = req.query.device_id; // Use req.query to get the device_id
 
-  const queryESP = 'SELECT * FROM Data_ESP WHERE device_id = ?';
+  const queryESP = 'SELECT device_id, energy, created_timestamp FROM Data_ESP WHERE device_id = ?';
   const queryTuya = 'SELECT * FROM Data_Tuya WHERE device_id = ?';
 
   const combinedData = {};
@@ -115,6 +115,7 @@ router.get('/data/:device_id', (req, res) => {
     });
   });
 });
+
 
 
 module.exports = router;
