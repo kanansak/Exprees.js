@@ -4,7 +4,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const router = express.Router();
 
-const secretKey = 'your_secret_key'; // Replace with your secret key
+const secretKey = '1234'; // Replace with your secret key
+const issuerClaim = 'localhost';
+const audienceClaim = 'THE_AUDIENCE';
 
 // Assuming you have a database connection in db.js
 const db = require('../db');
@@ -17,28 +19,35 @@ router.post('/signin', async (req, res) => {
 
     if (results.length > 0) {
       const user = results[0];
-      const { user_id, namef, password: hashedPassword } = user;
+      const { id, namef, password: hashedPassword } = user;
 
       const passwordsMatch = await bcrypt.compare(password, hashedPassword);
 
       if (passwordsMatch) {
+        const issuedAtClaim = Math.floor(Date.now() / 1000);
+        const expireClaim = issuedAtClaim + 3600;
+
         const token = jwt.sign(
           {
-            user_id,
-            userEmail: email,
+            iss: issuerClaim,
+            sub: id,
+            aud: audienceClaim,
+            iat: issuedAtClaim,
+            exp: expireClaim,
+            data: {
+              id: id,
+              userEmail: email,
+            }
           },
-          secretKey,
-          {
-            expiresIn: '1h', // Token expires in 1 hour
-          }
+          secretKey
         );
 
         res.json({
-          message: 'Success',
-          id: user_id,
+          message: 'success',
+          id: id,
           token,
           email: email,
-          expiry: Math.floor(Date.now() / 1000) + 3600, // Token expiry in Unix timestamp format
+          expiry: expireClaim,
         });
       } else {
         res.status(401).json({ message: 'Authentication failed' });
