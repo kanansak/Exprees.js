@@ -65,25 +65,27 @@ router.get('/latest_data_tuya', (req, res) => {
 
 router.get('/latest_data', (req, res) => {
   const device_id = req.query.device_id;
-  const queryESP = 'SELECT * FROM Data_ESP WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
-  const queryTuya = 'SELECT * FROM Data_Tuya WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
+  const queryESP = 'SELECT device_id, voltage, current, power, energy, frequency, pf, created_timestamp FROM Data_ESP WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
+  const queryTuya = 'SELECT device_id, voltage, current, power, created_timestamp FROM Data_Tuya WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
 
-  const response = {};
+  const response = [];
 
   db.query(queryESP, [device_id], (errESP, resultESP) => {
-      if (!errESP && resultESP.length > 0) {
-          response.esp = resultESP[0];
+    if (!errESP && resultESP.length > 0) {
+      response.push(resultESP[0]);
+    }
+
+    db.query(queryTuya, [device_id], (errTuya, resultTuya) => {
+      if (!errTuya && resultTuya.length > 0) {
+        response.push(resultTuya[0]);
       }
 
-      db.query(queryTuya, [device_id], (errTuya, resultTuya) => {
-          if (!errTuya && resultTuya.length > 0) {
-              response.tuya = resultTuya[0];
-          }
-
-          res.json(response);
-      });
+      res.json(response);
+    });
   });
 });
+
+
 
 // GET Data by device_id
 router.get('/data', (req, res) => {
