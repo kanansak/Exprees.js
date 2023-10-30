@@ -39,10 +39,10 @@ app.use(getRoutes);
 //const deviceRouter = require('./Devices/api-device')
 //app.use(deviceRouter);
 
-const pushImage = require('./push-image');
+const pushImage = require('./image/push-image');
 app.use(pushImage);
 
-const uploadFileRouter = require('./upload-file');
+const uploadFileRouter = require('./image/upload-file');
 app.use(uploadFileRouter);
 
 
