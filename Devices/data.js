@@ -88,13 +88,13 @@ router.get('/latest_data', (req, res) => {
 
 
 // GET Data by device_id
-router.get('/data', (req, res) => {
+router.get('/energy', (req, res) => {
   const device_id = req.query.device_id; // Use req.query to get the device_id
 
-  const queryESP = 'SELECT device_id, energy, created_timestamp FROM Data_ESP WHERE device_id = ?';
-  const queryTuya = 'SELECT * FROM Data_Tuya WHERE device_id = ?';
+  const queryESP = 'SELECT energy, created_timestamp FROM Data_ESP WHERE device_id = ?';
+  const queryTuya = 'SELECT created_timestamp FROM Data_Tuya WHERE device_id = ?';
 
-  const combinedData = {};
+  const combinedData = [];
 
   db.query(queryESP, [device_id], (errESP, resultESP) => {
     if (errESP) {
@@ -103,7 +103,12 @@ router.get('/data', (req, res) => {
       return;
     }
 
-    combinedData.Data_ESP = resultESP;
+    // Append ESP data to combinedData
+    combinedData.push(...resultESP.map(row => ({
+      device_id: device_id,
+      energy: row.energy,
+      created_timestamp: row.created_timestamp.toISOString(), // Format the timestamp as ISO string
+    })));
 
     db.query(queryTuya, [device_id], (errTuya, resultTuya) => {
       if (errTuya) {
@@ -112,11 +117,21 @@ router.get('/data', (req, res) => {
         return;
       }
 
-      combinedData.Data_Tuya = resultTuya;
+      // Append Tuya data to combinedData
+      combinedData.push(...resultTuya.map(row => ({
+        device_id: device_id,
+        energy: row.energy,
+        created_timestamp: row.created_timestamp.toISOString(), // Format the timestamp as ISO string
+      })));
+
       res.json(combinedData);
     });
   });
 });
+
+
+
+
 
 
 
