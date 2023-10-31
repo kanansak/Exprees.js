@@ -56,7 +56,7 @@ const data =require('./Devices/data')
 app.use(data);
 
 const userlogin = require('./User/auth0')
-app.use(userlogin);
+app.use('/api',userlogin);
 
 const inputdata = require('./api')
 app.use('/api',inputdata)
