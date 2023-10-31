@@ -5,7 +5,7 @@ const router = express.Router(); // ใช้ express.Router() แทนที�
 // Create a multer storage configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads'); // เปลี่ยนเส้นทางไปยัง 'uploads' แทนที่ '/uploads'
+    cb(null, 'image/uploads'); // เปลี่ยนเส้นทางไปยัง 'uploads' แทนที่ '/uploads'
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname); // Specify the file name
