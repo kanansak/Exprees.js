@@ -29,7 +29,7 @@ router.post('/register', (req, res) => {
     }
   });
 });
-
+///
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
   const selectQuery = 'SELECT * FROM users WHERE email = ?';
