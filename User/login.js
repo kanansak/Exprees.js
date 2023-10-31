@@ -15,7 +15,7 @@ router.post('/register', (req, res) => {
       console.error('Bcrypt error:', err);
       res.status(500).json({ error: 'Registration failed' });
     } else {
-      const insertQuery = 'INSERT INTO users (email, password, role ) VALUES (?, ?, ?)';
+      const insertQuery = 'INSERT INTO users (email, password) VALUES (?, ?)';
       const values = [email, hashedPassword,role];
 
       db.query(insertQuery, values, (err, result) => {
