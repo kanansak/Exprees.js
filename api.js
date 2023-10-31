@@ -40,7 +40,7 @@ router.get('/data/:id', (req, res) => {
 
 router.post('/data', (req, res) => {
   const { device_id, voltage, current, power, energy, frequency, pf } = req.body;
-  const query = 'INSERT INTO ESP_DATA (device_id, voltage, current, power, energy, frequency, pf, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())';
+  const query = 'INSERT INTO Data_ESP (device_id, voltage, current, power, energy, frequency, pf, created_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())';
 
   // ตรวจสอบว่าทุกค่าถูกส่งมาในคำขอหรือไม่
   if (!device_id || !voltage || !current || !power || !energy || !frequency || !pf) {

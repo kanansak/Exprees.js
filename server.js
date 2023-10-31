@@ -55,7 +55,8 @@ app.use(datadevice);
 const data =require('./Devices/data')
 app.use(data);
 
-
+const inputdata = require('./api')
+app.use('/api',inputdata)
 // รัน Express server ที่พอร์ตที่คุณต้องการ
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
