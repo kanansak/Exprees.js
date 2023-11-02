@@ -51,6 +51,11 @@ const datadevice = require('./Devices/data-device')
 app.use(datadevice);
 
 
+const unitCost = require('./unitCost')
+app.use(unitCost);
+
+
+
 //http://localhost:3000/data_esp
 const data =require('./Devices/data')
 app.use(data);
