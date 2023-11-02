@@ -5,14 +5,14 @@ const router = express.Router();
 const db = require('./db');
 
 // API Endpoint สำหรับการสร้างข้อมูลใหม่
-router.put('/postUnitCost', (req, res) => {
+router.put('/putUnitCost', (req, res) => {
   const { unitCost } = req.body;
   const query = 'Update unitCost set unitCost = ?';
 
   db.query(query, [unitCost], (err, result) => {
     if (err) {
-      console.error(' UnitCostPostเกิดข้อผิดพลาดสร้าง: ' + err.message);
-      res.status(500).send('UnitCostPOstเกิดข้อผิดพลาดในการสร้างข้อมูล');
+      console.error(' UnitCostPutเกิดข้อผิดพลาดสร้าง: ' + err.message);
+      res.status(500).send('UnitCostPutเกิดข้อผิดพลาดในการสร้างข้อมูล');
       return;
     }
 
@@ -22,18 +22,17 @@ router.put('/postUnitCost', (req, res) => {
 
 router.get('/getUnitCost',(req,res)=>{
     const{unitCost}=req.body;
-    const query = 'Select unitCost (unitCost) Values(?)';
+    const query = 'SELECT * FROM unitCost';
 
-    db.query(query, [unitCost], (err, result) => {
+    db.query(query, (err, result) => {
         if (err) {
-          console.error(' UnitCostGetเกิดข้อผิดพลาดสร้าง: ' + err.message);
-          res.status(500).send('UnitCostGetเกิดข้อผิดพลาดในการสร้างข้อมูล');
+          console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+          res.status(500).send('เกิดข้อผิดพลาดในการดึงข้อมูล');
           return;
         }
     
-        res.json({ message: 'UnitCostข้อมูลถูกสร้างเรียบร้อย' });
+        res.json(result);
       });
-
 });
 
 module.exports = router;
