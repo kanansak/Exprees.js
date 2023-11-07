@@ -43,8 +43,9 @@ router.post('/login', (req, res) => {
       if (results.length === 1) {
         bcrypt.compare(password, results[0].password, (err, passwordMatch) => {
           if (passwordMatch) {
-            const token = generateToken(results[0].id);
-            res.json({ message: 'Login successful', token, role: results[0].role });
+            const { id, name, role, level, group } = results[0];
+            const token = generateToken(id);
+            res.json({ message: 'Login successful', token, name, email, role, level, group });
           } else {
             res.status(401).json({ error: 'Login failed' });
           }
@@ -55,6 +56,24 @@ router.post('/login', (req, res) => {
     }
   });
 });
+
+
+router.get('/profile/:email', (req, res) => {
+  const email = req.params.email;
+
+  const sql = 'SELECT id, name, email, role, level, `group` FROM users WHERE email = ?'; // Replace "username" with the correct column name
+  db.query(sql, [email], (err, result) => {
+    if (err) {
+      console.error('Error fetching user data by email: ' + err.message);
+      res.status(500).send('Error fetching user data by email');
+    } else if (result.length === 0) {
+      res.status(404).json({ message: 'User not found' });
+    } else {
+      res.status(200).json(result[0]);
+    }
+  });
+});
+
 
 
 function generateToken(userId) {

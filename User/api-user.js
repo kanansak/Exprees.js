@@ -61,4 +61,22 @@ router.delete('/users/:id', (req, res) => {
   });
 });
 
+// Read user data by email with specific fields
+router.get('/users/:email', (req, res) => {
+  const email = req.params.email;
+
+  const sql = 'SELECT id, name, email, role, level, `group` FROM users WHERE email = ?'; // Replace "username" with the correct column name
+  db.query(sql, [email], (err, result) => {
+    if (err) {
+      console.error('Error fetching user data by email: ' + err.message);
+      res.status(500).send('Error fetching user data by email');
+    } else if (result.length === 0) {
+      res.status(404).json({ message: 'User not found' });
+    } else {
+      res.status(200).json(result[0]);
+    }
+  });
+});
+
+
 module.exports = router;
