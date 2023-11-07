@@ -8,15 +8,19 @@ const db = require('../db'); // นำเข้าไฟล์การเชื
 router.use(express.json());
 
 router.post('/register', (req, res) => {
-  const { name,lname , email, password } = req.body;
+  const { name, lname, email, password } = req.body;
+
+  if (!name || !lname || !email || !password) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
 
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
       console.error('Bcrypt error:', err);
       res.status(500).json({ error: 'Registration failed' });
     } else {
-      const insertQuery = 'INSERT INTO users (name,lname,email, password) VALUES (?, ?,?,?)';
-      const values = [name,lname ,email, hashedPassword];
+      const insertQuery = 'INSERT INTO users (name, lname, email, password) VALUES (?, ?, ?, ?)';
+      const values = [name, lname, email, hashedPassword];
 
       db.query(insertQuery, values, (err, result) => {
         if (err) {
