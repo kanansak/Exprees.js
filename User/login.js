@@ -48,8 +48,11 @@ router.post('/login', (req, res) => {
         bcrypt.compare(password, results[0].password, (err, passwordMatch) => {
           if (passwordMatch) {
             const { id, name, role, level, group } = results[0];
-            const token = generateToken(id);
-            res.json({ message: 'Login successful', token, name, email, role, level, group });
+
+            // Fetch additional user data here if needed from the database
+
+            const token = generateToken({ id, name, email, role, level, group });
+            res.json({ message: 'Login successful', token });
           } else {
             res.status(401).json({ error: 'Login failed' });
           }
@@ -60,6 +63,8 @@ router.post('/login', (req, res) => {
     }
   });
 });
+
+
 
 
 router.get('/profile/:email', (req, res) => {
