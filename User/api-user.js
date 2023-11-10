@@ -31,11 +31,11 @@ router.get('/users', (req, res) => {
 });
 
 // อัปเดตข้อมูลผู้ใช้งาน
-router.put('/users/:id', (req, res) => {
+router.put('/users/:email', (req, res) => {
   const userId = req.params.id;
-  const { username, email } = req.body;
+  const { name,lname, email,role,group,access } = req.body;
 
-  const sql = 'UPDATE users SET username = ?, email = ? WHERE id = ?';
+  const sql = 'UPDATE users SET name = ?,lname = ?, email = ?, role = ? , group = ? , access = ? WHERE email = ?';
   db.query(sql, [username, email, userId], (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูลผู้ใช้: ' + err.message);
