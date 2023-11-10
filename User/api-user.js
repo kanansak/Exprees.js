@@ -3,19 +3,19 @@ const router = express.Router();
 const db = require('../db'); // นำเข้าไฟล์การเชื่อมต่อ MySQL
 
 // สร้างผู้ใช้งานใหม่
-router.post('/users', (req, res) => {
-  const { username, email } = req.body;
+// router.post('/users', (req, res) => {
+//   const { name, email } = req.body;
 
-  const sql = 'INSERT INTO users (username, email) VALUES (?, ?)';
-  db.query(sql, [username, email], (err, result) => {
-    if (err) {
-      console.error('เกิดข้อผิดพลาดในการสร้างผู้ใช้: ' + err.message);
-      res.status(500).send('เกิดข้อผิดพลาดในการสร้างผู้ใช้');
-    } else {
-      res.status(201).json({ message: 'สร้างผู้ใช้งานเรียบร้อยแล้ว' });
-    }
-  });
-});
+//   const sql = 'INSERT INTO users (name, email) VALUES (?, ?)';
+//   db.query(sql, [name, email], (err, result) => {
+//     if (err) {
+//       console.error('เกิดข้อผิดพลาดในการสร้างผู้ใช้: ' + err.message);
+//       res.status(500).send('เกิดข้อผิดพลาดในการสร้างผู้ใช้');
+//     } else {
+//       res.status(201).json({ message: 'สร้างผู้ใช้งานเรียบร้อยแล้ว' });
+//     }
+//   });
+// });
 
 // อ่านข้อมูลผู้ใช้งานทั้งหมด
 router.get('/users', (req, res) => {
@@ -65,7 +65,7 @@ router.delete('/users/:id', (req, res) => {
 router.get('/users/:email', (req, res) => {
   const email = req.params.email;
 
-  const sql = 'SELECT id, name, email, role, level, `group` FROM users WHERE email = ?'; // Replace "username" with the correct column name
+  const sql = 'SELECT id, name,lname, email, role, `group` ,Access FROM users WHERE email = ?'; // Replace "username" with the correct column name
   db.query(sql, [email], (err, result) => {
     if (err) {
       console.error('Error fetching user data by email: ' + err.message);

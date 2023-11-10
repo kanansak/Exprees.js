@@ -47,11 +47,11 @@ router.post('/login', (req, res) => {
       if (results.length === 1) {
         bcrypt.compare(password, results[0].password, (err, passwordMatch) => {
           if (passwordMatch) {
-            const { id, name, role, level, group } = results[0];
+            const { id, name,lname, role, Access, group } = results[0];
 
             // Fetch additional user data here if needed from the database
 
-            const token = generateToken({ id, name, email, role, level, group });
+            const token = generateToken({ id, name, email, lname,role, Access, group });
             res.json({ message: 'Login successful', token });
           } else {
             res.status(401).json({ error: 'Login failed' });
