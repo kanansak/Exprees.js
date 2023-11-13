@@ -42,6 +42,9 @@ app.use(getRoutes);
 const pushImage = require('./image/push-image');
 app.use(pushImage);
 
+const groups = require('./Group/group');
+app.use(groups);
+
 const uploadFileRouter = require('./image/upload-file');
 app.use(uploadFileRouter);
 

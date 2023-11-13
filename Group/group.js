@@ -46,5 +46,19 @@ router.delete('/device-groups/:group_id', (req, res) => {
   });
 });
 
+// Insert device group
+router.post('/device-groups', (req, res) => {
+  const { group_id, group_name } = req.body;
+
+  const sql = 'INSERT INTO Device_Group (group_id, group_name) VALUES (?, ?)';
+  db.query(sql, [group_id, group_name], (err, result) => {
+    if (err) {
+      console.error('Error inserting device group: ' + err.message);
+      res.status(500).send('Error inserting device group');
+    } else {
+      res.status(200).json({ message: 'Device group inserted successfully' });
+    }
+  });
+});
 
 module.exports = router;
