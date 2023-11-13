@@ -49,11 +49,11 @@ router.put('/users/:email', (req, res) => {
 
 
 // ลบผู้ใช้งาน
-router.delete('/users/:id', (req, res) => {
-  const userId = req.params.id;
+router.delete('/users/:email', (req, res) => {
+  const userEmail = req.params.email;
 
-  const sql = 'DELETE FROM users WHERE id = ?';
-  db.query(sql, [userId], (err, result) => {
+  const sql = 'DELETE FROM users WHERE email = ?';
+  db.query(sql, [userEmail], (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการลบผู้ใช้: ' + err.message);
       res.status(500).send('เกิดข้อผิดพลาดในการลบผู้ใช้');
@@ -62,6 +62,7 @@ router.delete('/users/:id', (req, res) => {
     }
   });
 });
+
 
 // Read user data by email with specific fields
 router.get('/users/:email', (req, res) => {
