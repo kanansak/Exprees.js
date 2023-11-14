@@ -66,7 +66,7 @@ router.get('/latest_data_tuya', (req, res) => {
 router.get('/latest_data', (req, res) => {
   const device_id = req.query.device_id;
   const queryESP = 'SELECT device_id, voltage, current, power, energy, frequency, pf, created_timestamp FROM Data_ESP WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
-  const queryTuya = 'SELECT device_id, voltage, current, power, created_timestamp FROM Data_Tuya WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
+  const queryTuya = 'SELECT device_id, voltage, current, power, energy,created_timestamp FROM Data_Tuya WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
 
   const response = [];
 
@@ -92,7 +92,7 @@ router.get('/energy', (req, res) => {
   const device_id = req.query.device_id; // Use req.query to get the device_id
 
   const queryESP = 'SELECT energy, created_timestamp FROM Data_ESP WHERE device_id = ?';
-  const queryTuya = 'SELECT created_timestamp FROM Data_Tuya WHERE device_id = ?';
+  const queryTuya = 'SELECT energy, created_timestamp FROM Data_Tuya WHERE device_id = ?';
 
   const combinedData = [];
 
