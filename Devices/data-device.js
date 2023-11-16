@@ -209,25 +209,6 @@ router.delete('/devices/:device_id', (req, res) => {
 });
 
 
-  
-  // GET Latest Device Data (by unique device_id)
-  router.get('/latest_device_data', (req, res) => {
-    const query = 'SELECT * FROM Device WHERE (device_id, created_timestamp) IN (SELECT device_id, MAX(created_timestamp) FROM Device GROUP BY device_id)';
-  
-    db.query(query, (err, result) => {
-      if (err) {
-        console.error('เกิดข้อผิดพลาดในการดึงข้อมูลล่าสุดจาก Device: ' + err.message);
-        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลล่าสุดจาก Device' });
-        return;
-      }
-  
-      res.json(result);
-    });
-  });
-  
-  
-  
 
-  
   module.exports = router;
   
