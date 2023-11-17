@@ -99,8 +99,6 @@ router.get('/data_by_group/:group_name', (req, res) => {
     res.json(result[0]); // ใช้ result[0] เพื่อเข้าถึงข้อมูลของกลุ่มเดียว
   });
 });
-
-
 //ดึงข้อมูล ค่าเฉลี่ย ค่ารวม ของทั้งหมด ใช้แสดงเป็นตัวเลข
 router.get('/sum_data', (req, res) => {
   const query = `
@@ -127,7 +125,6 @@ router.get('/sum_data', (req, res) => {
     res.json(result[0]); // เนื่องจากมีแค่แถวเดียวจะเลือก index 0 เพื่อส่งผลลัพธ์กลับ
   });
 });
-
 //ดึงข้อมูลทั้งหมด ตาม group_name ใช้แสดงในกราฟ
 router.get('/all_data_group/:group_name', (req, res) => {
   const groupName = req.params.group_name;
@@ -255,9 +252,8 @@ router.get('/latest_all_energy', (req, res) => {
     res.json(result[0]); // ใช้ result[0] เพื่อเข้าถึงข้อมูลที่ได้จากการ SUM
   });
 });
-
-
-router.get('/latest_energy/:group_name', (req, res) => {
+// ดึงข้อมูลล่าสุด energy ของอุปกรณ์แต่ละกลุ่ม และ ทำการ summ
+router.get('/latest_energy_group/:group_name', (req, res) => {
   const groupName = req.params.group_name;
 
   const query = `
