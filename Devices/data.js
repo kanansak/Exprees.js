@@ -214,7 +214,7 @@ router.get('/latest_all_energy', (req, res) => {
   const query = `
     SELECT 
       'Latest All Energy' AS data_source,
-      SUM(energy) AS total_energy
+      SUM(energy) AS latest_energy
     FROM (
       SELECT device_id, energy
       FROM (
