@@ -101,52 +101,6 @@ router.get('/data_by_group/:group_name', (req, res) => {
 });
 
 
-router.get('/latest_energy/:group_name', (req, res) => {
-  const groupName = req.params.group_name;
-
-  const query = `
-    SELECT 
-      'Latest Energy' AS data_source,
-      SUM(energy) AS latest_energy
-    FROM (
-      SELECT device_id, energy
-      FROM Data_ESP
-      WHERE device_id IN (
-        SELECT device_id
-        FROM Device
-        WHERE group_id = (
-          SELECT group_id 
-          FROM Device_Group 
-          WHERE group_name = ?
-        )
-      )
-      UNION ALL
-      SELECT device_id, energy
-      FROM Data_Tuya
-      WHERE device_id IN (
-        SELECT device_id
-        FROM Device
-        WHERE group_id = (
-          SELECT group_id 
-          FROM Device_Group 
-          WHERE group_name = ?
-        )
-      )
-    ) AS combined_data
-  `;
-
-  db.query(query, [groupName, groupName], (err, result) => {
-    if (err) {
-      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
-      return;
-    }
-
-    res.json(result[0]); // ใช้ result[0] เพื่อเข้าถึงข้อมูลของกลุ่มเดียว
-  });
-});
-
-
 //ดึงข้อมูล ค่าเฉลี่ย ค่ารวม ของทั้งหมด ใช้แสดงเป็นตัวเลข
 router.get('/sum_data', (req, res) => {
   const query = `
@@ -262,12 +216,33 @@ router.get('/all_data', (req, res) => {
 router.get('/latest_all_energy', (req, res) => {
   const query = `
     SELECT 
+      'Latest All Energy' AS data_source,
       SUM(energy) AS total_energy
     FROM (
-      SELECT energy FROM Data_ESP
-      UNION ALL
-      SELECT energy FROM Data_Tuya
-    ) AS combined_energy
+      SELECT device_id, energy
+      FROM (
+        SELECT device_id, energy, created_timestamp
+        FROM Data_ESP
+        UNION ALL
+        SELECT device_id, energy, created_timestamp
+        FROM Data_Tuya
+      ) AS combined_data
+      WHERE (device_id, created_timestamp) IN (
+        SELECT device_id, MAX(created_timestamp) AS latest_timestamp
+        FROM (
+          SELECT device_id, MAX(created_timestamp) AS created_timestamp
+          FROM Data_ESP
+          GROUP BY device_id
+            
+          UNION ALL
+            
+          SELECT device_id, MAX(created_timestamp) AS created_timestamp
+          FROM Data_Tuya
+          GROUP BY device_id
+        ) AS max_timestamps
+        GROUP BY device_id
+      )
+    ) AS latest_energy_data
   `;
 
   db.query(query, (err, result) => {
@@ -278,6 +253,88 @@ router.get('/latest_all_energy', (req, res) => {
     }
 
     res.json(result[0]); // ใช้ result[0] เพื่อเข้าถึงข้อมูลที่ได้จากการ SUM
+  });
+});
+
+
+router.get('/latest_energy/:group_name', (req, res) => {
+  const groupName = req.params.group_name;
+
+  const query = `
+    SELECT 
+      'Latest Energy' AS data_source,
+      SUM(energy) AS latest_energy
+    FROM (
+      SELECT device_id, energy
+      FROM (
+        SELECT device_id, energy, created_timestamp
+        FROM Data_ESP
+        WHERE device_id IN (
+          SELECT device_id
+          FROM Device
+          WHERE group_id = (
+            SELECT group_id 
+            FROM Device_Group 
+            WHERE group_name = ?
+          )
+        )
+        UNION ALL
+        SELECT device_id, energy, created_timestamp
+        FROM Data_Tuya
+        WHERE device_id IN (
+          SELECT device_id
+          FROM Device
+          WHERE group_id = (
+            SELECT group_id 
+            FROM Device_Group 
+            WHERE group_name = ?
+          )
+        )
+      ) AS combined_data
+      WHERE (device_id, created_timestamp) IN (
+        SELECT device_id, MAX(created_timestamp) AS latest_timestamp
+        FROM (
+          SELECT device_id, MAX(created_timestamp) AS created_timestamp
+          FROM Data_ESP
+          WHERE device_id IN (
+            SELECT device_id
+            FROM Device
+            WHERE group_id = (
+              SELECT group_id 
+              FROM Device_Group 
+              WHERE group_name = ?
+            )
+          )
+          GROUP BY device_id
+            
+          UNION ALL
+            
+          SELECT device_id, MAX(created_timestamp) AS created_timestamp
+          FROM Data_Tuya
+          WHERE device_id IN (
+            SELECT device_id
+            FROM Device
+            WHERE group_id = (
+              SELECT group_id 
+              FROM Device_Group 
+              WHERE group_name = ?
+            )
+          )
+          GROUP BY device_id
+        ) AS max_timestamps
+        GROUP BY device_id
+      )
+    ) AS latest_energy_data
+  `;
+
+  db.query(query, [groupName, groupName, groupName, groupName], (err, result) => {
+    if (err) {
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
+      return;
+    }
+
+    res.json(result[0]); // ใช้ result[0] เพื่อเข้าถึงข้อมูลของกลุ่มเดียว
   });
 });
 
