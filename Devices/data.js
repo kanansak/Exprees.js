@@ -70,8 +70,8 @@ router.get('/energy', (req, res) => {
 
 
 //ดึงข้อมูลค่าเฉี่ย ค่ารวม โดยอ้างอิงตาม group_name ใช้แสดงเป็นตัวเลข
-router.get('/data_by_group/:group_id', (req, res) => {
-  const groupId = req.params.group_id;
+router.get('/data_by_group/:group_name', (req, res) => {
+  const groupName = req.params.group_name;
 
   const query = `
     SELECT 
@@ -85,11 +85,11 @@ router.get('/data_by_group/:group_id', (req, res) => {
     INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id
     LEFT JOIN Data_ESP ON Device.device_id = Data_ESP.device_id
     LEFT JOIN Data_Tuya ON Device.device_id = Data_Tuya.device_id
-    WHERE Device_Group.group_id = ?
+    WHERE Device_Group.group_name = ?
     GROUP BY Device_Group.group_name
   `;
 
-  db.query(query, [groupId], (err, result) => {
+  db.query(query, [groupName], (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
@@ -99,7 +99,6 @@ router.get('/data_by_group/:group_id', (req, res) => {
     res.json(result[0]); // ใช้ result[0] เพื่อเข้าถึงข้อมูลของกลุ่มเดียว
   });
 });
-
 //ดึงข้อมูล ค่าเฉลี่ย ค่ารวม ของทั้งหมด ใช้แสดงเป็นตัวเลข
 router.get('/sum_data', (req, res) => {
   const query = `
@@ -127,38 +126,44 @@ router.get('/sum_data', (req, res) => {
   });
 });
 //ดึงข้อมูลทั้งหมด ตาม group_name ใช้แสดงในกราฟ
-router.get('/all_data_group/:group_id', (req, res) => {
-  const groupId = req.params.group_id;
+router.get('/all_data_group/:group_name', (req, res) => {
+  const groupName = req.params.group_name;
 
   const query = `
     SELECT 
       'Data_ESP' AS data_source,
-      Data_ESP.device_id,
-      Data_ESP.voltage,
-      Data_ESP.current,
-      Data_ESP.power,
-      Data_ESP.energy,
-      Data_ESP.created_timestamp
+      device_id,
+      voltage,
+      current,
+      power,
+      energy,
+      created_timestamp
     FROM Data_ESP
-    INNER JOIN Device ON Data_ESP.device_id = Device.device_id
-    WHERE Device.group_id = ?
+    WHERE device_id IN (
+      SELECT device_id FROM Device WHERE group_id IN (
+        SELECT group_id FROM Device_Group WHERE group_name = ?
+      )
+    )
     
     UNION ALL
     
     SELECT 
       'Data_Tuya' AS data_source,
-      Data_Tuya.device_id,
-      Data_Tuya.voltage,
-      Data_Tuya.current,
-      Data_Tuya.power,
-      Data_Tuya.energy,
-      Data_Tuya.created_timestamp
+      device_id,
+      voltage,
+      current,
+      power,
+      energy,
+      created_timestamp
     FROM Data_Tuya
-    INNER JOIN Device ON Data_Tuya.device_id = Device.device_id
-    WHERE Device.group_id = ?
+    WHERE device_id IN (
+      SELECT device_id FROM Device WHERE group_id IN (
+        SELECT group_id FROM Device_Group WHERE group_name = ?
+      )
+    )
   `;
 
-  db.query(query, [groupId, groupId], (err, result) => {
+  db.query(query, [groupName, groupName], (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
