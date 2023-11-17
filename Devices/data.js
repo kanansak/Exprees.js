@@ -70,12 +70,12 @@ router.get('/energy', (req, res) => {
 
 
 //ดึงข้อมูลค่าเฉี่ย ค่ารวม โดยอ้างอิงตาม group_name ใช้แสดงเป็นตัวเลข
-router.get('/data_by_group/:group_name', (req, res) => {
-  const groupName = req.params.group_name;
+router.get('/data_by_group/:group_id', (req, res) => {
+  const groupId = req.params.group_id;
 
   const query = `
     SELECT 
-      Device_Group.group_name,
+      Device_Group.group_id,
       AVG(COALESCE(Data_ESP.voltage, Data_Tuya.voltage)) AS avg_voltage,
       AVG(COALESCE(Data_ESP.current, Data_Tuya.current)) AS avg_current,
       AVG(COALESCE(Data_ESP.power, Data_Tuya.power)) AS avg_power,
@@ -85,20 +85,21 @@ router.get('/data_by_group/:group_name', (req, res) => {
     INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id
     LEFT JOIN Data_ESP ON Device.device_id = Data_ESP.device_id
     LEFT JOIN Data_Tuya ON Device.device_id = Data_Tuya.device_id
-    WHERE Device_Group.group_name = ?
-    GROUP BY Device_Group.group_name
+    WHERE Device_Group.group_id = ?
+    GROUP BY Device_Group.group_id
   `;
 
-  db.query(query, [groupName], (err, result) => {
+  db.query(query, [groupId], (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
       return;
     }
 
-    res.json(result[0]); // ใช้ result[0] เพื่อเข้าถึงข้อมูลของกลุ่มเดียว
+    res.json(result[0]); // Use result[0] to access data for a single group
   });
 });
+
 //ดึงข้อมูล ค่าเฉลี่ย ค่ารวม ของทั้งหมด ใช้แสดงเป็นตัวเลข
 router.get('/sum_data', (req, res) => {
   const query = `
@@ -126,8 +127,8 @@ router.get('/sum_data', (req, res) => {
   });
 });
 //ดึงข้อมูลทั้งหมด ตาม group_name ใช้แสดงในกราฟ
-router.get('/all_data_group/:group_name', (req, res) => {
-  const groupName = req.params.group_name;
+router.get('/all_data_group/:group_id', (req, res) => {
+  const groupId = req.params.group_id;
 
   const query = `
     SELECT 
@@ -140,9 +141,7 @@ router.get('/all_data_group/:group_name', (req, res) => {
       created_timestamp
     FROM Data_ESP
     WHERE device_id IN (
-      SELECT device_id FROM Device WHERE group_id IN (
-        SELECT group_id FROM Device_Group WHERE group_name = ?
-      )
+      SELECT device_id FROM Device WHERE group_id = ?
     )
     
     UNION ALL
@@ -157,13 +156,11 @@ router.get('/all_data_group/:group_name', (req, res) => {
       created_timestamp
     FROM Data_Tuya
     WHERE device_id IN (
-      SELECT device_id FROM Device WHERE group_id IN (
-        SELECT group_id FROM Device_Group WHERE group_name = ?
-      )
+      SELECT device_id FROM Device WHERE group_id = ?
     )
   `;
 
-  db.query(query, [groupName, groupName], (err, result) => {
+  db.query(query, [groupId, groupId], (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
@@ -173,6 +170,7 @@ router.get('/all_data_group/:group_name', (req, res) => {
     res.json(result);
   });
 });
+
 //ดึงข้อมูลทั้งหมด  ใช้แสดงในกราฟ
 router.get('/all_data', (req, res) => {
   const query = `
@@ -253,8 +251,8 @@ router.get('/latest_all_energy', (req, res) => {
   });
 });
 // ดึงข้อมูลล่าสุด energy ของอุปกรณ์แต่ละกลุ่ม และ ทำการ summ
-router.get('/latest_energy_group/:group_name', (req, res) => {
-  const groupName = req.params.group_name;
+router.get('/latest_energy_group/:group_id', (req, res) => {
+  const groupId = req.params.group_id;
 
   const query = `
     SELECT 
@@ -268,11 +266,7 @@ router.get('/latest_energy_group/:group_name', (req, res) => {
         WHERE device_id IN (
           SELECT device_id
           FROM Device
-          WHERE group_id = (
-            SELECT group_id 
-            FROM Device_Group 
-            WHERE group_name = ?
-          )
+          WHERE group_id = ?
         )
         UNION ALL
         SELECT device_id, energy, created_timestamp
@@ -280,11 +274,7 @@ router.get('/latest_energy_group/:group_name', (req, res) => {
         WHERE device_id IN (
           SELECT device_id
           FROM Device
-          WHERE group_id = (
-            SELECT group_id 
-            FROM Device_Group 
-            WHERE group_name = ?
-          )
+          WHERE group_id = ?
         )
       ) AS combined_data
       WHERE (device_id, created_timestamp) IN (
@@ -295,11 +285,7 @@ router.get('/latest_energy_group/:group_name', (req, res) => {
           WHERE device_id IN (
             SELECT device_id
             FROM Device
-            WHERE group_id = (
-              SELECT group_id 
-              FROM Device_Group 
-              WHERE group_name = ?
-            )
+            WHERE group_id = ?
           )
           GROUP BY device_id
             
@@ -310,11 +296,7 @@ router.get('/latest_energy_group/:group_name', (req, res) => {
           WHERE device_id IN (
             SELECT device_id
             FROM Device
-            WHERE group_id = (
-              SELECT group_id 
-              FROM Device_Group 
-              WHERE group_name = ?
-            )
+            WHERE group_id = ?
           )
           GROUP BY device_id
         ) AS max_timestamps
@@ -323,14 +305,14 @@ router.get('/latest_energy_group/:group_name', (req, res) => {
     ) AS latest_energy_data
   `;
 
-  db.query(query, [groupName, groupName, groupName, groupName], (err, result) => {
+  db.query(query, [groupId, groupId, groupId, groupId], (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
       return;
     }
 
-    res.json(result[0]); // ใช้ result[0] เพื่อเข้าถึงข้อมูลของกลุ่มเดียว
+    res.json(result[0]); // Use result[0] to access data for a single group
   });
 });
 
