@@ -137,7 +137,8 @@ router.get('/all_data_group/:group_name', (req, res) => {
       current,
       power,
       energy,
-      created_timestamp
+      created_timestamp,
+      '${groupName}' AS group_name
     FROM Data_ESP
     WHERE device_id IN (
       SELECT device_id FROM Device WHERE group_id IN (
@@ -154,7 +155,8 @@ router.get('/all_data_group/:group_name', (req, res) => {
       current,
       power,
       energy,
-      created_timestamp
+      created_timestamp,
+      '${groupName}' AS group_name
     FROM Data_Tuya
     WHERE device_id IN (
       SELECT device_id FROM Device WHERE group_id IN (
@@ -173,6 +175,8 @@ router.get('/all_data_group/:group_name', (req, res) => {
     res.json(result);
   });
 });
+
+
 //ดึงข้อมูลทั้งหมด  ใช้แสดงในกราฟ
 router.get('/all_data', (req, res) => {
   const query = `
