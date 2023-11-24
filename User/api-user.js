@@ -35,8 +35,47 @@ router.put('/users/:email', (req, res) => {
   const userEmail = req.params.email;
   const { name, lname, email, role, group, access } = req.body;
 
-  const sql = 'UPDATE users SET name = ?, lname = ?, email = ?, role = ?, `group` = ?, access = ? WHERE email = ?';
-  db.query(sql, [name, lname, email, role, group, access, userEmail], (err, result) => {
+  // Build the dynamic part of the query based on the provided fields
+  let sql = 'UPDATE users SET ';
+  const updateFields = [];
+  const updateValues = [];
+
+  if (name) {
+    updateFields.push('name = ?');
+    updateValues.push(name);
+  }
+
+  if (lname) {
+    updateFields.push('lname = ?');
+    updateValues.push(lname);
+  }
+
+  if (role) {
+    updateFields.push('role = ?');
+    updateValues.push(role);
+  }
+
+  if (group) {
+    updateFields.push('`group` = ?');
+    updateValues.push(group);
+  }
+
+  if (access) {
+    updateFields.push('access = ?');
+    updateValues.push(access);
+  }
+
+  // If email is present, update it, otherwise, use the existing value
+  if (email) {
+    updateFields.push('email = ?');
+    updateValues.push(email);
+  }
+
+  sql += updateFields.join(', ');
+  sql += ' WHERE email = ?';
+  updateValues.push(userEmail);
+
+  db.query(sql, updateValues, (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูลผู้ใช้: ' + err.message);
       res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตข้อมูลผู้ใช้');
@@ -45,6 +84,7 @@ router.put('/users/:email', (req, res) => {
     }
   });
 });
+
 
 
 
