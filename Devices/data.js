@@ -131,35 +131,33 @@ router.get('/all_data_group/:group_id', (req, res) => {
   const groupId = req.params.group_id;
 
   const query = `
-    SELECT 
-      'Data_ESP' AS data_source,
-      device_id,
-      voltage,
-      current,
-      power,
-      energy,
-      created_timestamp
-    FROM Data_ESP
-    WHERE device_id IN (
-      SELECT device_id FROM Device WHERE group_id = ?
-    )
-    
-    UNION ALL
-    
-    SELECT 
-      'Data_Tuya' AS data_source,
-      device_id,
-      voltage,
-      current,
-      power,
-      energy,
-      created_timestamp
-    FROM Data_Tuya
-    WHERE device_id IN (
-      SELECT device_id FROM Device WHERE group_id = ?
-    )
+    SELECT data_source, device_id, SUM(energy) as energy, MAX(created_timestamp) as end_time
+    FROM (
+      SELECT 
+        'Data_ESP' AS data_source,
+        device_id,
+        energy,
+        created_timestamp
+      FROM Data_ESP
+      WHERE device_id IN (
+        SELECT device_id FROM Device WHERE group_id = ?
+      )
+      
+      UNION ALL
+      
+      SELECT 
+        'Data_Tuya' AS data_source,
+        device_id,
+        energy,
+        created_timestamp
+      FROM Data_Tuya
+      WHERE device_id IN (
+        SELECT device_id FROM Device WHERE group_id = ?
+      )
+    ) AS combined_data
+    GROUP BY data_source, device_id, FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 300) 
   `;
-
+  // เปลี่ยนการแบ่งช่วงของข้อมูลจากทุก 1 นาทีเป็นทุก 5 นาที ใน SQL query (SECOND, '1970-01-01', created_timestamp) / 300)
   db.query(query, [groupId, groupId], (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
@@ -167,9 +165,17 @@ router.get('/all_data_group/:group_id', (req, res) => {
       return;
     }
 
+    // Update the end_time value in each result object
+    result.forEach(item => {
+      item.created_timestamp = item.end_time; // Set created_timestamp to end_time
+      delete item.end_time; // Remove end_time if not needed
+    });
+
     res.json(result);
   });
 });
+
+
 
 //ดึงข้อมูลทั้งหมด  ใช้แสดงในกราฟ
 router.get('/all_data', (req, res) => {
