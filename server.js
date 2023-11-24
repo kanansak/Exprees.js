@@ -11,18 +11,6 @@ app.use(cors());
 app.use(express.json());
 
 
-// app.post('/login', (req, res) => {
-//   const { email, password } = req.body;
-//   const user = users.find(u => u.email === email && u.password === password);
-
-//   if (user) {
-//     res.json({ role: user.role });
-//   } else {
-//     res.status(401).json({ message: 'Authentication failed' });
-//   }
-// });
-
-
 const getRoutes = require('./Devices/latestData');
 app.use(getRoutes);
 
