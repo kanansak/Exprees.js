@@ -30,35 +30,44 @@ router.get('/latest_data', (req, res) => {
 router.get('/energy', (req, res) => {
   const device_id = req.query.device_id; // Use req.query to get the device_id
 
-  const queryESP = 'SELECT energy, created_timestamp FROM Data_ESP WHERE device_id = ?';
-  const queryTuya = 'SELECT energy, created_timestamp FROM Data_Tuya WHERE device_id = ?';
+  const queryESP = `
+    SELECT device_id, SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
+    FROM Data_ESP
+    WHERE device_id = ?
+    GROUP BY device_id, FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 600)
+  `;
+
+  const queryTuya = `
+    SELECT device_id, SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
+    FROM Data_Tuya
+    WHERE device_id = ?
+    GROUP BY device_id, FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 600)
+  `;
 
   const combinedData = [];
 
   db.query(queryESP, [device_id], (errESP, resultESP) => {
     if (errESP) {
-      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล Data_ESP: ' + errESP.message);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล Data_ESP' });
+      console.error('Error fetching Data_ESP: ' + errESP.message);
+      res.status(500).json({ message: 'Error fetching Data_ESP' });
       return;
     }
 
-    // Append ESP data to combinedData
     combinedData.push(...resultESP.map(row => ({
-      device_id: device_id,
+      device_id: row.device_id,
       energy: row.energy,
       created_timestamp: row.created_timestamp.toISOString(), // Format the timestamp as ISO string
     })));
 
     db.query(queryTuya, [device_id], (errTuya, resultTuya) => {
       if (errTuya) {
-        console.error('เกิดข้อผิดพลาดในการดึงข้อมูล Data_Tuya: ' + errTuya.message);
-        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล Data_Tuya' });
+        console.error('Error fetching Data_Tuya: ' + errTuya.message);
+        res.status(500).json({ message: 'Error fetching Data_Tuya' });
         return;
       }
 
-      // Append Tuya data to combinedData
       combinedData.push(...resultTuya.map(row => ({
-        device_id: device_id,
+        device_id: row.device_id,
         energy: row.energy,
         created_timestamp: row.created_timestamp.toISOString(), // Format the timestamp as ISO string
       })));
@@ -155,7 +164,7 @@ router.get('/all_data_group/:group_id', (req, res) => {
         SELECT device_id FROM Device WHERE group_id = ?
       )
     ) AS combined_data
-    GROUP BY data_source, device_id, FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 300) 
+    GROUP BY data_source, device_id, FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 600) 
   `;
   // เปลี่ยนการแบ่งช่วงของข้อมูลจากทุก 1 นาทีเป็นทุก 5 นาที ใน SQL query (SECOND, '1970-01-01', created_timestamp) / 300)
   db.query(query, [groupId, groupId], (err, result) => {
@@ -194,7 +203,7 @@ router.get('/all_data', (req, res) => {
         created_timestamp
       FROM Data_Tuya
     ) AS combined_data
-    GROUP BY FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 60)
+    GROUP BY FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 600)
   `;
 
   db.query(query, (err, result) => {
