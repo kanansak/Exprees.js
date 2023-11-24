@@ -180,27 +180,25 @@ router.get('/all_data_group/:group_id', (req, res) => {
 //ดึงข้อมูลทั้งหมด  ใช้แสดงในกราฟ
 router.get('/all_data', (req, res) => {
   const query = `
-    SELECT 
-      'Data_ESP' AS data_source,
-      device_id,
-      voltage,
-      current,
-      power,
-      energy,
-      created_timestamp
-    FROM Data_ESP
-    
-    UNION ALL
-    
-    SELECT 
-      'Data_Tuya' AS data_source,
-      device_id,
-      voltage,
-      current,
-      power,
-      energy,
-      created_timestamp
-    FROM Data_Tuya
+    SELECT data_source, device_id, SUM(energy) as energy, MAX(created_timestamp) as end_time
+    FROM (
+      SELECT 
+        'Data_ESP' AS data_source,
+        device_id,
+        energy,
+        created_timestamp
+      FROM Data_ESP
+      
+      UNION ALL
+      
+      SELECT 
+        'Data_Tuya' AS data_source,
+        device_id,
+        energy,
+        created_timestamp
+      FROM Data_Tuya
+    ) AS combined_data
+    GROUP BY data_source, device_id, FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 60)
   `;
 
   db.query(query, (err, result) => {
@@ -213,6 +211,7 @@ router.get('/all_data', (req, res) => {
     res.json(result);
   });
 });
+
 //ดึงข้อมูลenergy ล่าสุด  ใช้แสดงตัวเลข
 router.get('/latest_all_energy', (req, res) => {
   const query = `
