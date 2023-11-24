@@ -207,7 +207,10 @@ router.get('/all_data', (req, res) => {
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
       return;
     }
-
+    result.forEach(item => {
+      item.created_timestamp = item.end_time; // Set created_timestamp to end_time
+      delete item.end_time; // Remove end_time if not needed
+    });
     res.json(result);
   });
 });
