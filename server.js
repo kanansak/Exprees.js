@@ -47,6 +47,12 @@ app.use(unitCost);
 const data =require('./Devices/data')
 app.use(data);
 
+const dataMouth =require('./Devices/data-mouth')
+app.use(dataMouth);
+
+const dataYears =require('./Devices/data-years')
+app.use(dataYears);
+
 const userlogin = require('./User/login')
 app.use('/api',userlogin);
 

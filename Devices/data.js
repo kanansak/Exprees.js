@@ -26,27 +26,30 @@ router.get('/latest_data', (req, res) => {
 
 
 
-// GET Data by device_id
+// GET Data by device_id รายวัน แสดงข้อมูล ทุก 1ชั่วโมง
 router.get('/energy', (req, res) => {
   const device_id = req.query.device_id; // Use req.query to get the device_id
+
+  const today = new Date(); // Get current date
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0); // Start of current day at 00:00
 
   const queryESP = `
     SELECT device_id, SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
     FROM Data_ESP
-    WHERE device_id = ?
-    GROUP BY device_id, FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 600)
+    WHERE device_id = ? AND created_timestamp >= ? AND DATE(created_timestamp) = CURDATE()
+    GROUP BY device_id, DATE(created_timestamp), FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 3600)
   `;
 
   const queryTuya = `
     SELECT device_id, SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
     FROM Data_Tuya
-    WHERE device_id = ?
-    GROUP BY device_id, FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 600)
+    WHERE device_id = ? AND created_timestamp >= ? AND DATE(created_timestamp) = CURDATE()
+    GROUP BY device_id, DATE(created_timestamp), FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 3600)
   `;
 
   const combinedData = [];
 
-  db.query(queryESP, [device_id], (errESP, resultESP) => {
+  db.query(queryESP, [device_id, startOfToday], (errESP, resultESP) => {
     if (errESP) {
       console.error('Error fetching Data_ESP: ' + errESP.message);
       res.status(500).json({ message: 'Error fetching Data_ESP' });
@@ -59,7 +62,7 @@ router.get('/energy', (req, res) => {
       created_timestamp: row.created_timestamp.toISOString(), // Format the timestamp as ISO string
     })));
 
-    db.query(queryTuya, [device_id], (errTuya, resultTuya) => {
+    db.query(queryTuya, [device_id, startOfToday], (errTuya, resultTuya) => {
       if (errTuya) {
         console.error('Error fetching Data_Tuya: ' + errTuya.message);
         res.status(500).json({ message: 'Error fetching Data_Tuya' });
@@ -76,7 +79,6 @@ router.get('/energy', (req, res) => {
     });
   });
 });
-
 
 //ดึงข้อมูลค่าเฉี่ย ค่ารวม โดยอ้างอิงตาม group_name ใช้แสดงเป็นตัวเลข
 router.get('/data_by_group/:group_id', (req, res) => {
