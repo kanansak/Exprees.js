@@ -1,6 +1,8 @@
 const express = require('express');
 const db = require('../db');
 const router = express.Router();
+// **หน้า devices**
+// ข้อมูลรายเดือน แสดงข้อมูลเป็นทุก 1 วัน
 //ข้อมูลพลังงานอุปกรณ์ รายเดือน ปัจจุบัน ใช้แสดงกราฟ
 router.get('/energy_month', (req, res) => {
     const device_id = req.query.device_id; // Use req.query to get the device_id
@@ -58,6 +60,9 @@ router.get('/energy_month', (req, res) => {
       });
     });
   });
+
+// **หน้ากลุ่มอุปกรณ์**
+//ข้อมูลรายเดือน แสดงข้อมูลเป็นทุก 1 วัน
 //ดึงข้อมูลค่าเฉี่ย ค่ารวม โดยอ้างอิงตาม group_name ใช้แสดงเป็นตัวเลข รายเดือน
 router.get('/data_by_group_month/:group_id', (req, res) => {
   const groupId = req.params.group_id;
@@ -98,7 +103,54 @@ router.get('/data_by_group_month/:group_id', (req, res) => {
     res.json(result);
   });
 });
+//ดึงข้อมูลทั้งหมด ตาม group_name ใช้แสดงในกราฟ แสดงข้อมูล 1 เดือน ทุก 1วัน แสดงกราฟ
+router.get('/all_data_group_month/:group_id', (req, res) => {
+    const groupId = req.params.group_id;
+  
+    const today = new Date(); // Get current date
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0); // Start of current month at 00:00:00
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59); // End of current month at 23:59:59
+  
+    const query = `
+      SELECT SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
+      FROM (
+        SELECT energy, created_timestamp
+        FROM Data_ESP
+        WHERE device_id IN (
+          SELECT device_id FROM Device WHERE group_id = ?
+        ) AND created_timestamp >= ? AND created_timestamp <= ?
+        
+        UNION ALL
+        
+        SELECT energy, created_timestamp
+        FROM Data_Tuya
+        WHERE device_id IN (
+          SELECT device_id FROM Device WHERE group_id = ?
+        ) AND created_timestamp >= ? AND created_timestamp <= ?
+      ) AS combined_data
+      GROUP BY FLOOR(TIMESTAMPDIFF(DAY, '1970-01-01', created_timestamp))
+    `;
+  
+    db.query(query, [groupId, startOfMonth, endOfMonth, groupId, startOfMonth, endOfMonth], (err, result) => {
+      if (err) {
+        console.error('Error fetching data: ' + err.message);
+        res.status(500).json({ message: 'Error fetching data' });
+        return;
+      }
+  
+      // Update the created_timestamp value in each result object
+      result.forEach(item => {
+        item.created_timestamp = item.created_timestamp; // Update the field name
+      });
+  
+      res.json(result);
+    });
+  });
 
+
+//   **หน้า all dashboard**
+//ข้อมูลรายเดือน แสดงข้อมูลเป็นทุก 1 วัน
+//ข้อมูลรายเดือน แสดงข้อมูลเป็นทุก 1 วัน
 //ข้อมูลพลังงานอุปกรณ์ทั้งหมด รายเดือน ปัจจุบัน ใช้แสดงกราฟ
 router.get('/all_data_month', (req, res) => {
     const today = new Date(); // Get current date
@@ -133,7 +185,6 @@ router.get('/all_data_month', (req, res) => {
       res.json(result);
     });
   });
-  
 //ดึงข้อมูล ค่าเฉลี่ย ค่ารวม ของทั้งหมด ใช้แสดงเป็นตัวเลข ในเดือนปัจจุบัน
 router.get('/sum_data_month', (req, res) => {
   const today = new Date(); // Get current date

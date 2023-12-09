@@ -23,7 +23,8 @@ router.get('/latest_data', (req, res) => {
     });
   });
 });
-
+//**หน้า devices**
+//ข้อมูลรายวัน แสดงข้อมูลเป็นทุก 1 ชั่วโมง
 // GET Data by device_id รายวัน แสดงข้อมูล ทุก 1ชั่วโมง
 router.get('/energy', (req, res) => {
   const device_id = req.query.device_id; // Use req.query to get the device_id
@@ -78,77 +79,8 @@ router.get('/energy', (req, res) => {
   });
 });
 
-
-
-//ดึงข้อมูล ค่าเฉลี่ย ค่ารวม ของทั้งหมด ใช้แสดงเป็นตัวเลข
-router.get('/sum_data', (req, res) => {
-  const today = new Date(); // Get current date
-  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0); // Start of current day at 00:00:00
-  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0, 0); // Start of next day at 00:00:00
-
-  const query = `
-    SELECT 
-      AVG(voltage) AS avg_voltage,
-      AVG(current) AS avg_current,
-      AVG(power) AS avg_power,
-      SUM(energy) AS total_energy,
-      MAX(created_timestamp) AS latest_timestamp
-    FROM (
-      SELECT voltage, current, power, energy, created_timestamp FROM Data_ESP
-      UNION ALL
-      SELECT voltage, current, power, energy, created_timestamp FROM Data_Tuya
-    ) AS CombinedData
-    WHERE created_timestamp >= ? AND created_timestamp < ?
-  `;
-
-  db.query(query, [startOfToday, endOfToday], (err, result) => {
-    if (err) {
-      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
-      return;
-    }
-
-    res.json(result[0]); // เนื่องจากมีแค่แถวเดียวจะเลือก index 0 เพื่อส่งผลลัพธ์กลับ
-  });
-});
-
-//ดึงข้อมูลทั้งหมด  ใช้แสดงในกราฟ 1 วัน ทุก 1ชั่วโมง
-router.get('/all_data', (req, res) => {
-  const today = new Date(); // Get current date
-  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0); // Start of current day at 00:00:00
-  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0, 0); // Start of next day at 00:00:00
-
-  const query = `
-    SELECT SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
-    FROM (
-      SELECT 
-        energy,
-        created_timestamp
-      FROM Data_ESP
-      
-      UNION ALL
-      
-      SELECT 
-        energy,
-        created_timestamp
-      FROM Data_Tuya
-    ) AS combined_data
-    WHERE created_timestamp >= ? AND created_timestamp < ?
-    GROUP BY FLOOR(TIMESTAMPDIFF(HOUR, '1970-01-01', created_timestamp))
-  `;
-
-  db.query(query, [startOfToday, endOfToday], (err, result) => {
-    if (err) {
-      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
-      return;
-    }
-    
-    res.json(result);
-  });
-});
-
-
+//**หน้ากลุ่มอุปกรณ์**
+//ข้อมูลรายวัน แสดงข้อมูลเป็นทุก 1 ชั่วโมง
 //ดึงข้อมูลค่าเฉี่ย ค่ารวม โดยอ้างอิงตาม group_name ใช้แสดงเป็นตัวเลข แสดงข้อมูล 1 วัน ทุก 1ชั่วโมง
 router.get('/data_by_group/:group_id', (req, res) => {
   const groupId = req.params.group_id;
@@ -186,7 +118,6 @@ router.get('/data_by_group/:group_id', (req, res) => {
     res.json(result); // ส่งข้อมูลที่ได้กลับไป
   });
 });
-
 //ดึงข้อมูลทั้งหมด ตาม group_name ใช้แสดงในกราฟ แสดงข้อมูล 1 วัน ทุก 1ชั่วโมง
 router.get('/all_data_group/:group_id', (req, res) => {
   const groupId = req.params.group_id;
@@ -230,6 +161,77 @@ router.get('/all_data_group/:group_id', (req, res) => {
     res.json(result);
   });
 });
+
+//**หน้า all dashboard**
+//ข้อมูลรายวัน แสดงข้อมูลเป็นทุก 1 ชั่วโมง
+//ดึงข้อมูล ค่าเฉลี่ย ค่ารวม ของทั้งหมด ใช้แสดงเป็นตัวเลข
+router.get('/sum_data', (req, res) => {
+  const today = new Date(); // Get current date
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0); // Start of current day at 00:00:00
+  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0, 0); // Start of next day at 00:00:00
+
+  const query = `
+    SELECT 
+      AVG(voltage) AS avg_voltage,
+      AVG(current) AS avg_current,
+      AVG(power) AS avg_power,
+      SUM(energy) AS total_energy,
+      MAX(created_timestamp) AS latest_timestamp
+    FROM (
+      SELECT voltage, current, power, energy, created_timestamp FROM Data_ESP
+      UNION ALL
+      SELECT voltage, current, power, energy, created_timestamp FROM Data_Tuya
+    ) AS CombinedData
+    WHERE created_timestamp >= ? AND created_timestamp < ?
+  `;
+
+  db.query(query, [startOfToday, endOfToday], (err, result) => {
+    if (err) {
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
+      return;
+    }
+
+    res.json(result[0]); // เนื่องจากมีแค่แถวเดียวจะเลือก index 0 เพื่อส่งผลลัพธ์กลับ
+  });
+});
+//ดึงข้อมูลทั้งหมด  ใช้แสดงในกราฟ 1 วัน ทุก 1ชั่วโมง
+router.get('/all_data', (req, res) => {
+  const today = new Date(); // Get current date
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0); // Start of current day at 00:00:00
+  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0, 0); // Start of next day at 00:00:00
+
+  const query = `
+    SELECT SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
+    FROM (
+      SELECT 
+        energy,
+        created_timestamp
+      FROM Data_ESP
+      
+      UNION ALL
+      
+      SELECT 
+        energy,
+        created_timestamp
+      FROM Data_Tuya
+    ) AS combined_data
+    WHERE created_timestamp >= ? AND created_timestamp < ?
+    GROUP BY FLOOR(TIMESTAMPDIFF(HOUR, '1970-01-01', created_timestamp))
+  `;
+
+  db.query(query, [startOfToday, endOfToday], (err, result) => {
+    if (err) {
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
+      return;
+    }
+    
+    res.json(result);
+  });
+});
+
+
 
 
 //ดึงข้อมูลenergy ล่าสุด  ใช้แสดงตัวเลข
