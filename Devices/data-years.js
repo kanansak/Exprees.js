@@ -1,7 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const router = express.Router();
-
+//ข้อมูลพลังงานอุปกรณ์ รายปี ปัจจุบัน แสดงเป็นกราฟ
 router.get('/energy_years', (req, res) => {
     const device_id = req.query.device_id; // Use req.query to get the device_id
   
@@ -57,6 +57,111 @@ router.get('/energy_years', (req, res) => {
       });
     });
   });
-  
 
+//ข้อมูลพลังงานอุปกรณ์ทั้งหมด รายปี ปัจจุบัน ใช้แสดงกราฟ
+router.get('/all_data_years', (req, res) => {
+  const today = new Date(); // Get current date
+  const startOfYear = new Date(today.getFullYear(), 0, 1, 0, 0, 0); // Start of current year at 00:00:00
+  const endOfYear = new Date(today.getFullYear(), 11, 31, 23, 59, 59); // End of current year at 23:59:59
+
+  const query = `
+    SELECT 
+      AVG(voltage) AS avg_voltage,
+      AVG(current) AS avg_current,
+      AVG(power) AS avg_power,
+      SUM(energy) AS total_energy,
+      MAX(created_timestamp) AS latest_timestamp
+    FROM (
+      SELECT voltage, current, power, energy, created_timestamp FROM Data_ESP
+      WHERE created_timestamp >= ? AND created_timestamp <= ?
+      UNION ALL
+      SELECT voltage, current, power, energy, created_timestamp FROM Data_Tuya
+      WHERE created_timestamp >= ? AND created_timestamp <= ?
+    ) AS CombinedData
+    GROUP BY YEAR(created_timestamp), MONTH(created_timestamp)
+  `;
+
+  db.query(query, [startOfYear, endOfYear, startOfYear, endOfYear], (err, result) => {
+    if (err) {
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
+      return;
+    }
+
+    res.json(result);
+  });
+});
+
+//ดึงข้อมูล ค่าเฉลี่ย ค่ารวม ของทั้งหมด ใช้แสดงเป็นตัวเลข ในปีปัจจุบัน
+router.get('/sum_data_years', (req, res) => {
+  const today = new Date(); // Get current date
+  const startOfYear = new Date(today.getFullYear(), 0, 1, 0, 0, 0); // Start of current year at 00:00:00
+  const endOfYear = new Date(today.getFullYear(), 11, 31, 23, 59, 59); // End of current year at 23:59:59
+
+  const query = `
+    SELECT 
+      AVG(voltage) AS avg_voltage,
+      AVG(current) AS avg_current,
+      AVG(power) AS avg_power,
+      SUM(energy) AS total_energy,
+      MAX(created_timestamp) AS latest_timestamp
+    FROM (
+      SELECT voltage, current, power, energy, created_timestamp FROM Data_ESP
+      WHERE created_timestamp >= ? AND created_timestamp <= ?
+      UNION ALL
+      SELECT voltage, current, power, energy, created_timestamp FROM Data_Tuya
+      WHERE created_timestamp >= ? AND created_timestamp <= ?
+    ) AS CombinedData
+  `;
+
+  db.query(query, [startOfYear, endOfYear, startOfYear, endOfYear], (err, result) => {
+    if (err) {
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
+      return;
+    }
+
+    res.json(result[0]); // เนื่องจากมีแค่แถวเดียวจะเลือก index 0 เพื่อส่งผลลัพธ์กลับ
+  });
+});
+
+//ดึงข้อมูลค่าเฉี่ย ค่ารวม โดยอ้างอิงตาม group_name ใช้แสดงเป็นตัวเลข รายปี
+router.get('/data_by_group_years/:group_id', (req, res) => {
+    const groupId = req.params.group_id;
+  
+    const today = new Date(); // Get current date
+    const startOfYear = new Date(today.getFullYear(), 0, 1, 0, 0, 0); // Start of current year at 00:00:00
+    const endOfYear = new Date(today.getFullYear(), 11, 31, 23, 59, 59); // End of current year at 23:59:59
+  
+    const query = `
+      SELECT 
+        Device_Group.group_id,
+        DATE_FORMAT(COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp), '%Y-%m') AS month,
+        AVG(COALESCE(Data_ESP.voltage, Data_Tuya.voltage)) AS avg_voltage,
+        AVG(COALESCE(Data_ESP.current, Data_Tuya.current)) AS avg_current,
+        AVG(COALESCE(Data_ESP.power, Data_Tuya.power)) AS avg_power,
+        SUM(COALESCE(Data_ESP.energy, 0) + COALESCE(Data_Tuya.energy, 0)) AS total_energy,
+        GREATEST(MAX(Data_ESP.created_timestamp), MAX(Data_Tuya.created_timestamp)) AS latest_timestamp
+      FROM Device
+      INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id
+      LEFT JOIN Data_ESP ON Device.device_id = Data_ESP.device_id
+      LEFT JOIN Data_Tuya ON Device.device_id = Data_Tuya.device_id
+      WHERE Device_Group.group_id = ? AND 
+            (COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp) >= ? AND 
+            COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp) <= ?)
+      GROUP BY Device_Group.group_id, 
+               DATE_FORMAT(COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp), '%Y-%m')
+    `;
+  
+    db.query(query, [groupId, startOfYear, endOfYear], (err, result) => {
+      if (err) {
+        console.error('Error fetching data: ' + err.message);
+        res.status(500).json({ message: 'Error fetching data' });
+        return;
+      }
+  
+      res.json(result);
+    });
+  });
+  
 module.exports = router;

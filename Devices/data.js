@@ -24,8 +24,6 @@ router.get('/latest_data', (req, res) => {
   });
 });
 
-
-
 // GET Data by device_id รายวัน แสดงข้อมูล ทุก 1ชั่วโมง
 router.get('/energy', (req, res) => {
   const device_id = req.query.device_id; // Use req.query to get the device_id
@@ -80,9 +78,84 @@ router.get('/energy', (req, res) => {
   });
 });
 
-//ดึงข้อมูลค่าเฉี่ย ค่ารวม โดยอ้างอิงตาม group_name ใช้แสดงเป็นตัวเลข
+
+
+//ดึงข้อมูล ค่าเฉลี่ย ค่ารวม ของทั้งหมด ใช้แสดงเป็นตัวเลข
+router.get('/sum_data', (req, res) => {
+  const today = new Date(); // Get current date
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0); // Start of current day at 00:00:00
+  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0, 0); // Start of next day at 00:00:00
+
+  const query = `
+    SELECT 
+      AVG(voltage) AS avg_voltage,
+      AVG(current) AS avg_current,
+      AVG(power) AS avg_power,
+      SUM(energy) AS total_energy,
+      MAX(created_timestamp) AS latest_timestamp
+    FROM (
+      SELECT voltage, current, power, energy, created_timestamp FROM Data_ESP
+      UNION ALL
+      SELECT voltage, current, power, energy, created_timestamp FROM Data_Tuya
+    ) AS CombinedData
+    WHERE created_timestamp >= ? AND created_timestamp < ?
+  `;
+
+  db.query(query, [startOfToday, endOfToday], (err, result) => {
+    if (err) {
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
+      return;
+    }
+
+    res.json(result[0]); // เนื่องจากมีแค่แถวเดียวจะเลือก index 0 เพื่อส่งผลลัพธ์กลับ
+  });
+});
+
+//ดึงข้อมูลทั้งหมด  ใช้แสดงในกราฟ 1 วัน ทุก 1ชั่วโมง
+router.get('/all_data', (req, res) => {
+  const today = new Date(); // Get current date
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0); // Start of current day at 00:00:00
+  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0, 0); // Start of next day at 00:00:00
+
+  const query = `
+    SELECT SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
+    FROM (
+      SELECT 
+        energy,
+        created_timestamp
+      FROM Data_ESP
+      
+      UNION ALL
+      
+      SELECT 
+        energy,
+        created_timestamp
+      FROM Data_Tuya
+    ) AS combined_data
+    WHERE created_timestamp >= ? AND created_timestamp < ?
+    GROUP BY FLOOR(TIMESTAMPDIFF(HOUR, '1970-01-01', created_timestamp))
+  `;
+
+  db.query(query, [startOfToday, endOfToday], (err, result) => {
+    if (err) {
+      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
+      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
+      return;
+    }
+    
+    res.json(result);
+  });
+});
+
+
+//ดึงข้อมูลค่าเฉี่ย ค่ารวม โดยอ้างอิงตาม group_name ใช้แสดงเป็นตัวเลข แสดงข้อมูล 1 วัน ทุก 1ชั่วโมง
 router.get('/data_by_group/:group_id', (req, res) => {
   const groupId = req.params.group_id;
+
+  const today = new Date(); // Get current date
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0); // Start of current day at 00:00:00
+  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0, 0); // Start of next day at 00:00:00
 
   const query = `
     SELECT 
@@ -96,50 +169,31 @@ router.get('/data_by_group/:group_id', (req, res) => {
     INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id
     LEFT JOIN Data_ESP ON Device.device_id = Data_ESP.device_id
     LEFT JOIN Data_Tuya ON Device.device_id = Data_Tuya.device_id
-    WHERE Device_Group.group_id = ?
-    GROUP BY Device_Group.group_id
+    WHERE Device_Group.group_id = ? AND 
+          (COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp) >= ? AND 
+          COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp) < ?)
+    GROUP BY Device_Group.group_id, 
+             DATE_FORMAT(COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp), '%Y-%m-%d %H')
   `;
 
-  db.query(query, [groupId], (err, result) => {
+  db.query(query, [groupId, startOfToday, endOfToday], (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
       return;
     }
 
-    res.json(result[0]); // Use result[0] to access data for a single group
+    res.json(result); // ส่งข้อมูลที่ได้กลับไป
   });
 });
 
-//ดึงข้อมูล ค่าเฉลี่ย ค่ารวม ของทั้งหมด ใช้แสดงเป็นตัวเลข
-router.get('/sum_data', (req, res) => {
-  const query = `
-    SELECT 
-      AVG(voltage) AS avg_voltage,
-      AVG(current) AS avg_current,
-      AVG(power) AS avg_power,
-      SUM(energy) AS total_energy,
-      MAX(created_timestamp) AS latest_timestamp
-    FROM (
-      SELECT voltage, current, power, energy, created_timestamp FROM Data_ESP
-      UNION ALL
-      SELECT voltage, current, power, energy, created_timestamp FROM Data_Tuya
-    ) AS CombinedData
-  `;
-
-  db.query(query, (err, result) => {
-    if (err) {
-      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
-      return;
-    }
-
-    res.json(result[0]); // เนื่องจากมีแค่แถวเดียวจะเลือก index 0 เพื่อส่งผลลัพธ์กลับ
-  });
-});
-//ดึงข้อมูลทั้งหมด ตาม group_name ใช้แสดงในกราฟ
+//ดึงข้อมูลทั้งหมด ตาม group_name ใช้แสดงในกราฟ แสดงข้อมูล 1 วัน ทุก 1ชั่วโมง
 router.get('/all_data_group/:group_id', (req, res) => {
   const groupId = req.params.group_id;
+
+  const today = new Date(); // Get current date
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0); // Start of current day at 00:00:00
+  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0, 0); // Start of next day at 00:00:00
 
   const query = `
     SELECT SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
@@ -148,7 +202,7 @@ router.get('/all_data_group/:group_id', (req, res) => {
       FROM Data_ESP
       WHERE device_id IN (
         SELECT device_id FROM Device WHERE group_id = ?
-      )
+      ) AND created_timestamp >= ? AND created_timestamp < ?
       
       UNION ALL
       
@@ -156,12 +210,12 @@ router.get('/all_data_group/:group_id', (req, res) => {
       FROM Data_Tuya
       WHERE device_id IN (
         SELECT device_id FROM Device WHERE group_id = ?
-      )
+      ) AND created_timestamp >= ? AND created_timestamp < ?
     ) AS combined_data
-    GROUP BY FLOOR(TIMESTAMPDIFF(DAY, '1970-01-01', created_timestamp))
+    GROUP BY FLOOR(TIMESTAMPDIFF(HOUR, '1970-01-01', created_timestamp))
   `;
 
-  db.query(query, [groupId, groupId], (err, result) => {
+  db.query(query, [groupId, startOfToday, endOfToday, groupId, startOfToday, endOfToday], (err, result) => {
     if (err) {
       console.error('Error fetching data: ' + err.message);
       res.status(500).json({ message: 'Error fetching data' });
@@ -173,42 +227,6 @@ router.get('/all_data_group/:group_id', (req, res) => {
       item.created_timestamp = item.created_timestamp; // Update the field name
     });
 
-    res.json(result);
-  });
-});
-
-//ดึงข้อมูลทั้งหมด  ใช้แสดงในกราฟ
-router.get('/all_data', (req, res) => {
-  const query = `
-    SELECT SUM(energy) as energy, MAX(created_timestamp) as end_time
-    FROM (
-      SELECT 
-        energy,
-        created_timestamp
-      FROM Data_ESP
-      
-      UNION ALL
-      
-      SELECT 
-        energy,
-        created_timestamp
-      FROM Data_Tuya
-    ) AS combined_data
-    GROUP BY FLOOR(TIMESTAMPDIFF(DAY, '1970-01-01', created_timestamp))
-  `;
-
-  db.query(query, (err, result) => {
-    if (err) {
-      console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
-      res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
-      return;
-    }
-    
-    result.forEach(item => {
-      item.created_timestamp = item.end_time; // Set created_timestamp to end_time
-      delete item.end_time; // Remove end_time if not needed
-    });
-    
     res.json(result);
   });
 });
