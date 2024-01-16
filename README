@@ -1,3 +1,8 @@
+# Monitering Energy Platform 
+
+เป็น API ที่ใช้ในการรับ-ส่งข้อมูล เพื่อใช้ในการแสดง เพิ่ม แก้ไข ลบ ข้อมูล จาก Database
+
+
 npm install express
 npm install express mysql
 npm install -g nodemon
