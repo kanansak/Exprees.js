@@ -4,7 +4,7 @@ const db = require('../db'); // Import the MySQL connection file
 
 // Get all device groups
 router.get('/device-groups', (req, res) => {
-  const sql = 'SELECT * FROM Device_Group';
+  const sql = 'SELECT * FROM device_group';
   db.query(sql, (err, results) => {
     if (err) {
       console.error('Error fetching device groups: ' + err.message);
@@ -20,7 +20,7 @@ router.put('/device-groups/:group_id', (req, res) => {
   const groupId = req.params.group_id;
   const { group_name } = req.body;
 
-  const sql = 'UPDATE Device_Group SET group_name = ? WHERE group_id = ?';
+  const sql = 'UPDATE device_group SET group_name = ? WHERE group_id = ?';
   db.query(sql, [group_name, groupId], (err, result) => {
     if (err) {
       console.error('Error updating device group: ' + err.message);
@@ -35,7 +35,7 @@ router.put('/device-groups/:group_id', (req, res) => {
 router.delete('/device-groups/:group_id', (req, res) => {
   const groupId = req.params.group_id;
 
-  const sql = 'DELETE FROM Device_Group WHERE group_id = ?';
+  const sql = 'DELETE FROM device_group WHERE group_id = ?';
   db.query(sql, [groupId], (err, result) => {
     if (err) {
       console.error('Error deleting device group: ' + err.message);
@@ -50,7 +50,7 @@ router.delete('/device-groups/:group_id', (req, res) => {
 router.post('/device-groups', (req, res) => {
   const {  group_name } = req.body;
 
-  const sql = 'INSERT INTO Device_Group ( group_name) VALUES (?)';
+  const sql = 'INSERT INTO device_group ( group_name) VALUES (?)';
   db.query(sql, [ group_name], (err, result) => {
     if (err) {
       console.error('Error inserting device group: ' + err.message);

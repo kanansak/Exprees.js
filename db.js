@@ -2,9 +2,9 @@ const mysql = require('mysql');
 
 // กำหนดการเชื่อมต่อกับ MySQL
 const db = mysql.createConnection({
-  host: 'siamdev.info',    // เปลี่ยนตาม host ของ MySQL ของคุณ
-  user: 'mon',     // เปลี่ยนเป็นชื่อผู้ใช้ MySQL ของคุณ
-  password: 'mon', // เปลี่ยนเป็นรหัสผ่าน MySQL ของคุณ
+  host: 'localhost',    // เปลี่ยนตาม host ของ MySQL ของคุณ
+  user: 'root',     // เปลี่ยนเป็นชื่อผู้ใช้ MySQL ของคุณ
+  password: '', // เปลี่ยนเป็นรหัสผ่าน MySQL ของคุณ
   database: 'mon'    // เปลี่ยนเป็นชื่อฐานข้อมูลที่คุณต้องการเชื่อมต่อ
 });
 

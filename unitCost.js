@@ -7,7 +7,7 @@ const db = require('./db');
 // API Endpoint สำหรับการสร้างข้อมูลใหม่
 router.put('/putUnitCost', (req, res) => {
   const { unitCost } = req.body;
-  const query = 'Update unitCost set unitCost = ?';
+  const query = 'Update unitcost set unitcost = ?';
 
   db.query(query, [unitCost], (err, result) => {
     if (err) {
@@ -22,7 +22,7 @@ router.put('/putUnitCost', (req, res) => {
 
 router.get('/getUnitCost',(req,res)=>{
     const{unitCost}=req.body;
-    const query = 'SELECT * FROM unitCost';
+    const query = 'SELECT * FROM unitcost';
 
     db.query(query, (err, result) => {
         if (err) {

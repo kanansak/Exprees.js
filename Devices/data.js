@@ -4,8 +4,8 @@ const router = express.Router();
 
 router.get('/latest_data', (req, res) => {
   const device_id = req.query.device_id;
-  const queryESP = 'SELECT device_id, voltage, current, power, energy, frequency, pf, created_timestamp FROM Data_ESP WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
-  const queryTuya = 'SELECT device_id, voltage, current, power, energy,created_timestamp FROM Data_Tuya WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
+  const queryESP = 'SELECT device_id, voltage, current, power, energy, frequency, pf, created_timestamp FROM data_esp WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
+  const queryTuya = 'SELECT device_id, voltage, current, power, energy,created_timestamp FROM data_tuya WHERE device_id = ? ORDER BY created_timestamp DESC LIMIT 1';
 
   const response = [];
 
@@ -34,14 +34,14 @@ router.get('/energy', (req, res) => {
 
   const queryESP = `
     SELECT device_id, SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
-    FROM Data_ESP
+    FROM data_esp
     WHERE device_id = ? AND created_timestamp >= ? AND DATE(created_timestamp) = CURDATE()
     GROUP BY device_id, DATE(created_timestamp), FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 3600)
   `;
 
   const queryTuya = `
     SELECT device_id, SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
-    FROM Data_Tuya
+    FROM data_tuya
     WHERE device_id = ? AND created_timestamp >= ? AND DATE(created_timestamp) = CURDATE()
     GROUP BY device_id, DATE(created_timestamp), FLOOR(TIMESTAMPDIFF(SECOND, '1970-01-01', created_timestamp) / 3600)
   `;
@@ -50,8 +50,8 @@ router.get('/energy', (req, res) => {
 
   db.query(queryESP, [device_id, startOfToday], (errESP, resultESP) => {
     if (errESP) {
-      console.error('Error fetching Data_ESP: ' + errESP.message);
-      res.status(500).json({ message: 'Error fetching Data_ESP' });
+      console.error('Error fetching data_esp: ' + errESP.message);
+      res.status(500).json({ message: 'Error fetching data_esp' });
       return;
     }
 
@@ -63,8 +63,8 @@ router.get('/energy', (req, res) => {
 
     db.query(queryTuya, [device_id, startOfToday], (errTuya, resultTuya) => {
       if (errTuya) {
-        console.error('Error fetching Data_Tuya: ' + errTuya.message);
-        res.status(500).json({ message: 'Error fetching Data_Tuya' });
+        console.error('Error fetching data_tuya: ' + errTuya.message);
+        res.status(500).json({ message: 'Error fetching data_tuya' });
         return;
       }
 
@@ -85,30 +85,42 @@ router.get('/energy', (req, res) => {
 router.get('/data_by_group/:group_id', (req, res) => {
   const groupId = req.params.group_id;
 
-  const today = new Date(); // Get current date
-  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0); // Start of current day at 00:00:00
-  const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 0, 0, 0); // Start of next day at 00:00:00
-
   const query = `
     SELECT 
-      Device_Group.group_id,
-      AVG(COALESCE(Data_ESP.voltage, Data_Tuya.voltage)) AS avg_voltage,
-      AVG(COALESCE(Data_ESP.current, Data_Tuya.current)) AS avg_current,
-      AVG(COALESCE(Data_ESP.power, Data_Tuya.power)) AS avg_power,
-      SUM(COALESCE(Data_ESP.energy, 0) + COALESCE(Data_Tuya.energy, 0)) AS total_energy,
-      GREATEST(MAX(Data_ESP.created_timestamp), MAX(Data_Tuya.created_timestamp)) AS latest_timestamp
-    FROM Device
-    INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id
-    LEFT JOIN Data_ESP ON Device.device_id = Data_ESP.device_id
-    LEFT JOIN Data_Tuya ON Device.device_id = Data_Tuya.device_id
-    WHERE Device_Group.group_id = ? AND 
-          (COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp) >= ? AND 
-          COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp) < ?)
-    GROUP BY Device_Group.group_id, 
-             DATE_FORMAT(COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp), '%Y-%m-%d %H')
+      device_group.group_id,
+      AVG(COALESCE(latest_esp.voltage, latest_tuya.voltage)) AS avg_voltage,
+      AVG(COALESCE(latest_esp.current, latest_tuya.current)) AS avg_current,
+      AVG(COALESCE(latest_esp.power, latest_tuya.power)) AS avg_power,
+      SUM(COALESCE(latest_esp.energy, 0) + COALESCE(latest_tuya.energy, 0)) AS total_energy,
+      GREATEST(MAX(latest_esp.created_timestamp), MAX(latest_tuya.created_timestamp)) AS latest_timestamp
+    FROM device_group
+    LEFT JOIN device ON device.group_id = device_group.group_id
+    LEFT JOIN (
+      SELECT device_id, 
+             voltage,
+             current,
+             power,
+             energy,
+             MAX(created_timestamp) AS created_timestamp
+      FROM data_esp
+      GROUP BY device_id
+    ) AS latest_esp ON device.device_id = latest_esp.device_id
+    LEFT JOIN (
+      SELECT device_id, 
+             voltage,
+             current,
+             power,
+             energy,
+             MAX(created_timestamp) AS created_timestamp
+      FROM data_tuya
+      GROUP BY device_id
+    ) AS latest_tuya ON device.device_id = latest_tuya.device_id
+    WHERE device_group.group_id = ? AND 
+          COALESCE(latest_esp.created_timestamp, latest_tuya.created_timestamp) IS NOT NULL
+    GROUP BY device_group.group_id
   `;
 
-  db.query(query, [groupId, startOfToday, endOfToday], (err, result) => {
+  db.query(query, [groupId], (err, result) => {
     if (err) {
       console.error('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message);
       res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูล' });
@@ -118,6 +130,9 @@ router.get('/data_by_group/:group_id', (req, res) => {
     res.json(result); // ส่งข้อมูลที่ได้กลับไป
   });
 });
+
+
+
 //ดึงข้อมูลทั้งหมด ตาม group_name ใช้แสดงในกราฟ แสดงข้อมูล 1 วัน ทุก 1ชั่วโมง
 router.get('/all_data_group/:group_id', (req, res) => {
   const groupId = req.params.group_id;
@@ -130,17 +145,17 @@ router.get('/all_data_group/:group_id', (req, res) => {
     SELECT SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
     FROM (
       SELECT energy, created_timestamp
-      FROM Data_ESP
+      FROM data_esp
       WHERE device_id IN (
-        SELECT device_id FROM Device WHERE group_id = ?
+        SELECT device_id FROM device WHERE group_id = ?
       ) AND created_timestamp >= ? AND created_timestamp < ?
       
       UNION ALL
       
       SELECT energy, created_timestamp
-      FROM Data_Tuya
+      FROM data_tuya
       WHERE device_id IN (
-        SELECT device_id FROM Device WHERE group_id = ?
+        SELECT device_id FROM device WHERE group_id = ?
       ) AND created_timestamp >= ? AND created_timestamp < ?
     ) AS combined_data
     GROUP BY FLOOR(TIMESTAMPDIFF(HOUR, '1970-01-01', created_timestamp))
@@ -178,9 +193,9 @@ router.get('/sum_data', (req, res) => {
       SUM(energy) AS total_energy,
       MAX(created_timestamp) AS latest_timestamp
     FROM (
-      SELECT voltage, current, power, energy, created_timestamp FROM Data_ESP
+      SELECT voltage, current, power, energy, created_timestamp FROM data_esp
       UNION ALL
-      SELECT voltage, current, power, energy, created_timestamp FROM Data_Tuya
+      SELECT voltage, current, power, energy, created_timestamp FROM data_tuya
     ) AS CombinedData
     WHERE created_timestamp >= ? AND created_timestamp < ?
   `;
@@ -207,14 +222,14 @@ router.get('/all_data', (req, res) => {
       SELECT 
         energy,
         created_timestamp
-      FROM Data_ESP
+      FROM data_esp
       
       UNION ALL
       
       SELECT 
         energy,
         created_timestamp
-      FROM Data_Tuya
+      FROM data_tuya
     ) AS combined_data
     WHERE created_timestamp >= ? AND created_timestamp < ?
     GROUP BY FLOOR(TIMESTAMPDIFF(HOUR, '1970-01-01', created_timestamp))
@@ -244,22 +259,22 @@ router.get('/latest_all_energy', (req, res) => {
       SELECT device_id, energy
       FROM (
         SELECT device_id, energy, created_timestamp
-        FROM Data_ESP
+        FROM data_esp
         UNION ALL
         SELECT device_id, energy, created_timestamp
-        FROM Data_Tuya
+        FROM data_tuya
       ) AS combined_data
       WHERE (device_id, created_timestamp) IN (
         SELECT device_id, MAX(created_timestamp) AS latest_timestamp
         FROM (
           SELECT device_id, MAX(created_timestamp) AS created_timestamp
-          FROM Data_ESP
+          FROM data_esp
           GROUP BY device_id
             
           UNION ALL
             
           SELECT device_id, MAX(created_timestamp) AS created_timestamp
-          FROM Data_Tuya
+          FROM data_tuya
           GROUP BY device_id
         ) AS max_timestamps
         GROUP BY device_id
@@ -289,18 +304,18 @@ router.get('/latest_energy_group/:group_id', (req, res) => {
       SELECT device_id, energy
       FROM (
         SELECT device_id, energy, created_timestamp
-        FROM Data_ESP
+        FROM data_esp
         WHERE device_id IN (
           SELECT device_id
-          FROM Device
+          FROM device
           WHERE group_id = ?
         )
         UNION ALL
         SELECT device_id, energy, created_timestamp
-        FROM Data_Tuya
+        FROM data_tuya
         WHERE device_id IN (
           SELECT device_id
-          FROM Device
+          FROM device
           WHERE group_id = ?
         )
       ) AS combined_data
@@ -308,10 +323,10 @@ router.get('/latest_energy_group/:group_id', (req, res) => {
         SELECT device_id, MAX(created_timestamp) AS latest_timestamp
         FROM (
           SELECT device_id, MAX(created_timestamp) AS created_timestamp
-          FROM Data_ESP
+          FROM data_esp
           WHERE device_id IN (
             SELECT device_id
-            FROM Device
+            FROM device
             WHERE group_id = ?
           )
           GROUP BY device_id
@@ -319,10 +334,10 @@ router.get('/latest_energy_group/:group_id', (req, res) => {
           UNION ALL
             
           SELECT device_id, MAX(created_timestamp) AS created_timestamp
-          FROM Data_Tuya
+          FROM data_tuya
           WHERE device_id IN (
             SELECT device_id
-            FROM Device
+            FROM device
             WHERE group_id = ?
           )
           GROUP BY device_id

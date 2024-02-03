@@ -11,8 +11,8 @@ app.use(cors());
 app.use(express.json());
 
 
-const getRoutes = require('./Devices/latestData');
-app.use(getRoutes);
+// const getRoutes = require('./Devices/latestData');
+// app.use(getRoutes);
 
 // นำเส้นทาง CRUD ของผู้ใช้งานมาใช้
  const userRoutes = require('./User/api-user'); // นำเข้าไฟล์ CRUD ของผู้ใช้งาน

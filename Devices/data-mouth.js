@@ -16,14 +16,14 @@ router.get('/energy_month', (req, res) => {
   
     const queryESP = `
       SELECT device_id, SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
-      FROM Data_ESP
+      FROM data_esp
       WHERE device_id = ? AND created_timestamp >= ? AND created_timestamp < ?
       GROUP BY device_id, FLOOR(TIMESTAMPDIFF(DAY, '1970-01-01', created_timestamp) )
     `;
   
     const queryTuya = `
       SELECT device_id, SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
-      FROM Data_Tuya
+      FROM data_tuya
       WHERE device_id = ? AND created_timestamp >= ? AND created_timestamp < ?
       GROUP BY device_id, FLOOR(TIMESTAMPDIFF(DAY, '1970-01-01', created_timestamp) )
     `;
@@ -32,8 +32,8 @@ router.get('/energy_month', (req, res) => {
   
     db.query(queryESP, [device_id, startOfMonth, startOfNextMonth], (errESP, resultESP) => {
       if (errESP) {
-        console.error('Error fetching Data_ESP: ' + errESP.message);
-        res.status(500).json({ message: 'Error fetching Data_ESP' });
+        console.error('Error fetching data_esp: ' + errESP.message);
+        res.status(500).json({ message: 'Error fetching data_esp' });
         return;
       }
   
@@ -45,8 +45,8 @@ router.get('/energy_month', (req, res) => {
   
       db.query(queryTuya, [device_id, startOfMonth, startOfNextMonth], (errTuya, resultTuya) => {
         if (errTuya) {
-          console.error('Error fetching Data_Tuya: ' + errTuya.message);
-          res.status(500).json({ message: 'Error fetching Data_Tuya' });
+          console.error('Error fetching data_tuya: ' + errTuya.message);
+          res.status(500).json({ message: 'Error fetching data_tuya' });
           return;
         }
   
@@ -75,22 +75,22 @@ router.get('/data_by_group_month/:group_id', (req, res) => {
 
   const query = `
     SELECT 
-      Device_Group.group_id,
-      DATE_FORMAT(COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp), '%Y-%m-%d') AS date,
-      AVG(COALESCE(Data_ESP.voltage, Data_Tuya.voltage)) AS avg_voltage,
-      AVG(COALESCE(Data_ESP.current, Data_Tuya.current)) AS avg_current,
-      AVG(COALESCE(Data_ESP.power, Data_Tuya.power)) AS avg_power,
-      SUM(COALESCE(Data_ESP.energy, 0) + COALESCE(Data_Tuya.energy, 0)) AS total_energy,
-      GREATEST(MAX(Data_ESP.created_timestamp), MAX(Data_Tuya.created_timestamp)) AS latest_timestamp
-    FROM Device
-    INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id
-    LEFT JOIN Data_ESP ON Device.device_id = Data_ESP.device_id
-    LEFT JOIN Data_Tuya ON Device.device_id = Data_Tuya.device_id
-    WHERE Device_Group.group_id = ? AND 
-          (COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp) >= ? AND 
-          COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp) < ?)
-    GROUP BY Device_Group.group_id, 
-             DATE_FORMAT(COALESCE(Data_ESP.created_timestamp, Data_Tuya.created_timestamp), '%Y-%m-%d')
+      device_group.group_id,
+      DATE_FORMAT(COALESCE(data_esp.created_timestamp, data_tuya.created_timestamp), '%Y-%m-%d') AS date,
+      AVG(COALESCE(data_esp.voltage, data_tuya.voltage)) AS avg_voltage,
+      AVG(COALESCE(data_esp.current, data_tuya.current)) AS avg_current,
+      AVG(COALESCE(data_esp.power, data_tuya.power)) AS avg_power,
+      SUM(COALESCE(data_esp.energy, 0) + COALESCE(data_tuya.energy, 0)) AS total_energy,
+      GREATEST(MAX(data_esp.created_timestamp), MAX(data_tuya.created_timestamp)) AS latest_timestamp
+    FROM device
+    INNER JOIN device_group ON device.group_id = device_group.group_id
+    LEFT JOIN data_esp ON device.device_id = data_esp.device_id
+    LEFT JOIN data_tuya ON device.device_id = data_tuya.device_id
+    WHERE device_group.group_id = ? AND 
+          (COALESCE(data_esp.created_timestamp, data_tuya.created_timestamp) >= ? AND 
+          COALESCE(data_esp.created_timestamp, data_tuya.created_timestamp) < ?)
+    GROUP BY device_group.group_id, 
+             DATE_FORMAT(COALESCE(data_esp.created_timestamp, data_tuya.created_timestamp), '%Y-%m-%d')
   `;
 
   db.query(query, [groupId, startOfMonth, startOfNextMonth], (err, result) => {
@@ -115,17 +115,17 @@ router.get('/all_data_group_month/:group_id', (req, res) => {
       SELECT SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
       FROM (
         SELECT energy, created_timestamp
-        FROM Data_ESP
+        FROM data_esp
         WHERE device_id IN (
-          SELECT device_id FROM Device WHERE group_id = ?
+          SELECT device_id FROM device WHERE group_id = ?
         ) AND created_timestamp >= ? AND created_timestamp <= ?
         
         UNION ALL
         
         SELECT energy, created_timestamp
-        FROM Data_Tuya
+        FROM data_tuya
         WHERE device_id IN (
-          SELECT device_id FROM Device WHERE group_id = ?
+          SELECT device_id FROM device WHERE group_id = ?
         ) AND created_timestamp >= ? AND created_timestamp <= ?
       ) AS combined_data
       GROUP BY FLOOR(TIMESTAMPDIFF(DAY, '1970-01-01', created_timestamp))
@@ -167,9 +167,9 @@ router.get('/all_data_month', (req, res) => {
         SUM(energy) AS total_energy,
         MAX(created_timestamp) AS latest_timestamp
       FROM (
-        SELECT voltage, current, power, energy, created_timestamp FROM Data_ESP
+        SELECT voltage, current, power, energy, created_timestamp FROM data_esp
         UNION ALL
-        SELECT voltage, current, power, energy, created_timestamp FROM Data_Tuya
+        SELECT voltage, current, power, energy, created_timestamp FROM data_tuya
       ) AS CombinedData
       WHERE created_timestamp >= ? AND created_timestamp <= ?
       GROUP BY FLOOR(TIMESTAMPDIFF(DAY, '1970-01-01', created_timestamp))
@@ -199,10 +199,10 @@ router.get('/sum_data_month', (req, res) => {
       SUM(energy) AS total_energy,
       MAX(created_timestamp) AS latest_timestamp
     FROM (
-      SELECT voltage, current, power, energy, created_timestamp FROM Data_ESP
+      SELECT voltage, current, power, energy, created_timestamp FROM data_esp
       WHERE created_timestamp >= ? AND created_timestamp <= ?
       UNION ALL
-      SELECT voltage, current, power, energy, created_timestamp FROM Data_Tuya
+      SELECT voltage, current, power, energy, created_timestamp FROM data_tuya
       WHERE created_timestamp >= ? AND created_timestamp <= ?
     ) AS CombinedData
   `;

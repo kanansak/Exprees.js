@@ -6,7 +6,7 @@ const path = require('path');
   // CREATE (POST)
   router.post('/devices', (req, res) => {
     const { device_id, device_name, device_detail, device_location, device_map_img, device_type, group_id } = req.body;
-    const query = 'INSERT INTO Device (device_id, device_name, device_detail, device_location, device_map_img, device_type, group_id, created_timestamp, modified_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+    const query = 'INSERT INTO device (device_id, device_name, device_detail, device_location, device_map_img, device_type, group_id, created_timestamp, modified_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
 
     // แทนค่า null ถ้าข้อมูลเป็น null
     const values = [device_id || null, device_name || null, device_detail || null, device_location || null, device_map_img || null, device_type || null, group_id || null];
@@ -25,20 +25,20 @@ const path = require('path');
 
   // READ (GET all devices)
   router.get('/devices', (req, res) => {
-    // const query = 'SELECT * FROM Device';
+    // const query = 'SELECT * FROM device';
     const query = `
     SELECT 
-    Device.device_id, 
-    Device.device_name, 
-    Device.device_detail, 
-    Device.device_location, 
-    Device.device_map_img,
-    Device.group_id, 
-    Device.created_timestamp, 
-    Device.modified_timestamp,
-    Device_Group.group_name
-FROM Device
-INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id;
+    device.device_id, 
+    device.device_name, 
+    device.device_detail, 
+    device.device_location, 
+    device.device_map_img,
+    device.group_id, 
+    device.created_timestamp, 
+    device.modified_timestamp,
+    device_group.group_name
+FROM device
+INNER JOIN device_group ON device.group_id = device_group.group_id;
 
   `;
   
@@ -56,7 +56,7 @@ INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id;
   // READ (GET device by ID)
   router.get('/devices/:device_id', (req, res) => {
     const deviceId = req.params.device_id;
-    const query = 'SELECT * FROM Device WHERE device_id = ?';
+    const query = 'SELECT * FROM device WHERE device_id = ?';
   
     db.query(query, [deviceId], (err, result) => {
       if (err) {
@@ -77,7 +77,7 @@ INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id;
   // router.put('/devices/:device_id', (req, res) => {
   //   const device_id = req.params.device_id;
   //   const { device_name, device_detail, device_location, device_map, device_type, group_id } = req.body;
-  //   const query = 'UPDATE Device SET device_name = ?, device_detail = ?, device_location = ?, device_map_img = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
+  //   const query = 'UPDATE device SET device_name = ?, device_detail = ?, device_location = ?, device_map_img = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
   
   //   if (!device_name || !device_location) {
   //     res.status(400).json({ message: 'กรุณากรอกข้อมูลทั้งหมด' });
@@ -116,7 +116,7 @@ INNER JOIN Device_Group ON Device.group_id = Device_Group.group_id;
 router.put('/devices/:device_id', (req, res) => {
   const device_id = req.params.device_id;
   const { device_name, device_detail, device_location, device_map_img, device_type, group_id } = req.body;
-  const query = 'UPDATE Device SET device_name = ?, device_detail = ?, device_location = ?, device_map_img = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
+  const query = 'UPDATE device SET device_name = ?, device_detail = ?, device_location = ?, device_map_img = ?, device_type = ?, group_id = ?, modified_timestamp = NOW() WHERE device_id = ?';
 
   if (!device_name || !device_location ) {
     res.status(400).json({ message: 'กรุณากรอกข้อมูลทั้งหมด' });
@@ -158,15 +158,15 @@ router.delete('/devices/:device_id', (req, res) => {
     }
 
     // Define SQL queries
-    const updateDataESPQuery = 'DELETE FROM Data_ESP WHERE device_id = ?';
-    const updateDataTuyaQuery = 'DELETE FROM Data_Tuya WHERE device_id = ?';
-    const deleteDeviceQuery = 'DELETE FROM Device WHERE device_id = ?';
+    const updateDataESPQuery = 'DELETE FROM data_esp WHERE device_id = ?';
+    const updateDataTuyaQuery = 'DELETE FROM data_tuya WHERE device_id = ?';
+    const deleteDeviceQuery = 'DELETE FROM device WHERE device_id = ?';
 
     // Execute queries
     db.query(updateDataESPQuery, [device_id], (err, result) => {
       if (err) {
         db.rollback(() => {
-          console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล Data_ESP: ' + err.message);
+          console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล data_esp: ' + err.message);
           res.status(500).send('เกิดข้อผิดพลาดในการลบข้อมูล');
         });
         return;
@@ -175,7 +175,7 @@ router.delete('/devices/:device_id', (req, res) => {
       db.query(updateDataTuyaQuery, [device_id], (err, result) => {
         if (err) {
           db.rollback(() => {
-            console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล Data_Tuya: ' + err.message);
+            console.error('เกิดข้อผิดพลาดในการอัปเดตข้อมูล data_tuya: ' + err.message);
             res.status(500).send('เกิดข้อผิดพลาดในการลบข้อมูล');
           });
           return;
@@ -184,7 +184,7 @@ router.delete('/devices/:device_id', (req, res) => {
         db.query(deleteDeviceQuery, [device_id], (err, result) => {
           if (err) {
             db.rollback(() => {
-              console.error('เกิดข้อผิดพลาดในการลบข้อมูล Device: ' + err.message);
+              console.error('เกิดข้อผิดพลาดในการลบข้อมูล device: ' + err.message);
               res.status(500).send('เกิดข้อผิดพลาดในการลบข้อมูล');
             });
             return;
