@@ -157,8 +157,8 @@ router.get('/all_data_years', (req, res) => {
         AVG(voltage) AS avg_voltage,
         AVG(current) AS avg_current,
         AVG(power) AS avg_power,
-        SUM(energy) AS total_energy,
-        MAX(created_timestamp) AS latest_timestamp
+        SUM(energy) AS energy,
+        MAX(created_timestamp) AS created_timestamp
       FROM (
         SELECT voltage, current, power, energy, created_timestamp FROM data_esp
         WHERE created_timestamp >= ? AND created_timestamp <= ?
@@ -190,8 +190,8 @@ router.get('/sum_data_years', (req, res) => {
         AVG(voltage) AS avg_voltage,
         AVG(current) AS avg_current,
         AVG(power) AS avg_power,
-        SUM(energy) AS total_energy,
-        MAX(created_timestamp) AS latest_timestamp
+        SUM(energy) AS energy,
+        MAX(created_timestamp) AS created_timestamp
       FROM (
         SELECT voltage, current, power, energy, created_timestamp FROM data_esp
         WHERE created_timestamp >= ? AND created_timestamp <= ?
