@@ -1,6 +1,7 @@
 // นำเข้า Express และ MySQL module
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const bodyParser = require('body-parser');
 
 // สร้าง Express application
@@ -10,7 +11,29 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(express.static(path.join(__dirname, 'final-project')));
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'final-project', 'index.html'));
+});
+app.get('/device-component', (req, res) => {
+  res.sendFile(path.join(__dirname, 'final-project', 'index.html'));
+});
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'final-project', 'index.html'));
+});
+app.get('/profile-component', (req, res) => {
+  res.sendFile(path.join(__dirname, 'final-project', 'index.html'));
+});
+app.get('/login-component', (req, res) => {
+  res.sendFile(path.join(__dirname, 'final-project', 'index.html'));
+});
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'final-project', 'index.html'));
+});
+app.get('/about-component', (req, res) => {
+  res.sendFile(path.join(__dirname, 'final-project', 'index.html'));
+});
 // const getRoutes = require('./Devices/latestData');
 // app.use(getRoutes);
 
