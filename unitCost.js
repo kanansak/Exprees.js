@@ -5,20 +5,22 @@ const router = express.Router();
 const db = require('./db');
 
 // API Endpoint สำหรับการสร้างข้อมูลใหม่
-router.put('/putUnitCost', (req, res) => {
+router.put('/putUnitCost/:id', (req, res) => {
+  const { id } = req.params;
   const { unitCost } = req.body;
-  const query = 'Update unitcost set unitcost = ?';
+  const query = 'UPDATE unitcost SET unitcost = ? WHERE id = ?';
 
-  db.query(query, [unitCost], (err, result) => {
+  db.query(query, [unitCost, id], (err, result) => {
     if (err) {
-      console.error(' UnitCostPutเกิดข้อผิดพลาดสร้าง: ' + err.message);
-      res.status(500).send('UnitCostPutเกิดข้อผิดพลาดในการสร้างข้อมูล');
+      console.error('เกิดข้อผิดพลาดในการอัปเดต UnitCost: ' + err.message);
+      res.status(500).send('เกิดข้อผิดพลาดในการอัปเดตข้อมูล UnitCost');
       return;
     }
 
-    res.json({ message: 'UnitCostข้อมูลUpdateเรียบร้อย' });
+    res.json({ message: 'ข้อมูล UnitCost ได้ถูกอัปเดตเรียบร้อย' });
   });
 });
+
 
 router.get('/getUnitCost',(req,res)=>{
     const{unitCost}=req.body;
@@ -34,5 +36,6 @@ router.get('/getUnitCost',(req,res)=>{
         res.json(result);
       });
 });
+
 
 module.exports = router;
