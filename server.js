@@ -49,11 +49,17 @@ app.get('/about-component', (req, res) => {
 const pushImage = require('./image/push-image');
 app.use(pushImage);
 
+const pushImageIcon = require('./image/push-image-icon');
+app.use(pushImageIcon);
+
 const groups = require('./Group/group');
 app.use(groups);
 
 const uploadFileRouter = require('./image/upload-file');
 app.use(uploadFileRouter);
+
+const uploadFileRouterIcon = require('./image/upload-file-icon');
+app.use(uploadFileRouterIcon);
 
 
 //http://localhost:3000/devices
