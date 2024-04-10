@@ -426,6 +426,41 @@ router.get("/latest_energy_group/:group_id", (req, res) => {
   });
 });
 
+
+router.get("/select_data", (req, res) => {
+  const start = req.query.start;
+  const end = req.query.end;
+
+  const query = `
+    SELECT SUM(energy) as energy, MAX(created_timestamp) as created_timestamp
+    FROM (
+      SELECT 
+        energy,
+        created_timestamp
+      FROM data_esp
+      
+      UNION ALL
+      
+      SELECT 
+        energy,
+        created_timestamp
+      FROM data_tuya
+    ) AS combined_data
+    WHERE created_timestamp >= ? AND created_timestamp < ?
+    GROUP BY FLOOR(TIMESTAMPDIFF(HOUR, '1970-01-01', created_timestamp))
+  `;
+
+  db.query(query, [start, end], (err, result) => {
+    if (err) {
+      console.error("เกิดข้อผิดพลาดในการดึงข้อมูล: " + err.message);
+      res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+      return;
+    }
+
+    res.json(result);
+  });
+});
+
 module.exports = router;
 //latest_data_esp?device_id=your_device_id
 //latest_data_tuya?device_id=your_device_id
