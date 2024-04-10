@@ -55,6 +55,9 @@ app.use(groups);
 const uploadFileRouter = require('./image/upload-file');
 app.use(uploadFileRouter);
 
+const uploadFileRouterIcon = require('./image/upload-file-icon');
+app.use(uploadFileRouterIcon);
+
 
 //http://localhost:3000/devices
 const datadevice = require('./Devices/data-device')
