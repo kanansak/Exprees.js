@@ -49,6 +49,9 @@ app.get('/about-component', (req, res) => {
 const pushImage = require('./image/push-image');
 app.use(pushImage);
 
+const pushImageIcon = require('./image/push-image-icon');
+app.use(pushImageIcon);
+
 const groups = require('./Group/group');
 app.use(groups);
 
