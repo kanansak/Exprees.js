@@ -34,6 +34,9 @@ app.get('/admin', (req, res) => {
 app.get('/about-component', (req, res) => {
   res.sendFile(path.join(__dirname, 'final-project', 'index.html'));
 });
+app.get('/signup-component', (req, res) => {
+  res.sendFile(path.join(__dirname, 'final-project', 'index.html'));
+});
 // const getRoutes = require('./Devices/latestData');
 // app.use(getRoutes);
 
