@@ -3,3 +3,4 @@ db.js
 *.png
 db.js
 *.png
+/node_modules
